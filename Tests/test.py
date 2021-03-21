@@ -34,8 +34,7 @@ xx = np.linspace(-10, 21, 100).reshape(100, 1)  # test points must be of shape (
 
 ## predict mean and variance of latent GP at test points
 mean, var = m.predict_f(xx)
-mean1, var1 =
-print(mean1, var1)
+print(mean, var)
 
 ## generate 10 samples from posterior
 tf.random.set_seed(1)  # for reproducibility

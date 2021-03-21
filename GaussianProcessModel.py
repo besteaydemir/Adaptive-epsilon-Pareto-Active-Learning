@@ -4,65 +4,74 @@ from typing import List
 from math import sqrt
 from statistics import mean
 import gpflow
+import tensorflow as tf
 from gpflow.utilities import print_summary
 
 
 class GaussianProcessModel:
-    def __init__(self, X, Y, multi, m, mean_list, kernel_list, verbose=False):
+    def __init__(self, X, Y, multi, m, kernel_list, verbose=False):
         self.X = X
         self.Y = Y
 
         self.multi = multi
         self.m = m
 
-        self.mean_list = mean_list
         self.kernel_list = kernel_list
+
+        self.verbose = verbose
 
         if multi:
             pass
-            #self.model=multioutput()
+            # self.model=multioutput()
         else:
-            self.model = self.gp_list(verbose)
+            self.model = self.gp_list()
+
+
+    def gp_list(self):
+        gp_list = []
+        opt = gpflow.optimizers.Scipy()
+
+        for i in range(self.m):
+            print(self.Y[:,i].shape)
+            kernel = self.kernel_list[i]
+            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel)
+            print(m.log_marginal_likelihood())
+
+            # Tune the model parameters according to data
+            opt.minimize(
+                m.training_loss,
+                variables=m.trainable_variables,
+                method="l-bfgs-b",
+                options={"disp": False, "maxiter": 300}
+            )
+
+            gp_list.append(m)
+
+            if self.verbose:
+                print("For objective function ", i)
+                print_summary(m)
+                print("Log likelihood after optimization: ", tf.keras.backend.get_value(m.log_marginal_likelihood()))
+
+        return gp_list
 
     # def gp_multioutput(self, mean_list=None, kernel_list=None):
     #     return gp
 
-    def gp_list(self, verbose=False):
-        """
-        Returns a list of tuned GP models.
-        :param kernel_list:
-        :param mean_list:
-        :param verbose:
-        :return:
-        """
-        gp_list = []
-        opt = gpflow.optimizers.Scipy()
-        for i in range(self.m):
-            kernel = self.kernel_list[i]
-            mean_func = self.mean_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[i]), kernel=kernel, mean_function=mean_func)
-
-            # Tune the model parameters
-            opt_logs = opt.minimize(m.training_loss, m.trainable_variables, options=dict(maxiter=100))
-
-            gp_list[i] = m
-
-            if verbose:
-                print_summary(m)
-
-        return gp_list
-
     def inference(self, x):
-        if self.multi:
-            mu, sigma = self.model.predict_y(x)
-        else:
-            for gp in self.model:
-                mu, sigma = gp.predict_y(x)
+        mus = np.empty((self.m,1))
+        #sigmas = np.empty((self.m, 1))
+        var = np.empty((self.m, 1))
 
-        return mu, sigma
+        if self.multi:
+            mu, sigma = self.model.predict_f(x)
+            #todo
+        else:
+            for i, gp in enumerate(self.model):
+                mus[i], var[i] = gp.predict_y(x)
+
+        return mus, np.sqrt(var)
 
     def update(self, x, y):
-        self.X.append(x)
-        self.y.append(y)
-
+        self.X = np.vstack((self.X, x))
+        self.Y = np.vstack((self.Y, y))
         self.model = self.gp_list()

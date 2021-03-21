@@ -8,7 +8,7 @@ class Hyperrectangle:
     def __init__(self, lower, upper):
         self.upper = upper
         self.lower = lower
-        self.diameter = np.sum((upper-lower)**2)
+        self.diameter = np.sum((np.array(upper)-np.array(lower))**2)
 
     def is_pt_in_hypercube(self, point):
         # Translate the hypercube and the point
@@ -20,7 +20,7 @@ class Hyperrectangle:
     def get_dimension(self):
         return len(self.center)
 
-    def intersection(self, rect):
+    def intersect(self, rect):
         lower_new = []
         upper_new = []
         for l1, l2 in zip(self.lower, rect.get_lower()):
@@ -36,3 +36,6 @@ class Hyperrectangle:
 
     def get_upper(self):
         return self.upper
+
+    def __str__(self):
+        return "Upper: " + str(self.upper) + ", Lower: " + str(self.lower)

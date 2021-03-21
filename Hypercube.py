@@ -1,7 +1,7 @@
 """
 Represents a hypercube context region.
 """
-
+import numpy as np
 
 class Hypercube:
     def __init__(self, length, center):
@@ -17,3 +17,9 @@ class Hypercube:
 
     def get_dimension(self):
         return len(self.center)
+
+    def __str__(self):
+        return "Center: " + str(self.center) + ", Length: " + str(self.length)
+
+    def __eq__(self, other):
+        return np.all(other.center == self.center) and other.length == self.length

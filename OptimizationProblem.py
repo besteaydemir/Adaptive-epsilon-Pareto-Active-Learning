@@ -5,13 +5,15 @@ class OptimizationProblem:
     def __init__(self, func_list):
         self.func_list = func_list
         self.m = len(func_list)
+        self.cardinality = 121
+        self.N = 2
         self.D_1 = 2
         self.alpha = 1
-        self.problem_model.v
-        self.problem_model.L
+        self.v = 10
+        self.L = 0.15
 
     def observe(self, x, std=0):
-        obs = [func(x) + std * np.random.randn(self.m, ) for func in self.func_list]
+        obs = np.array([func(x) + std * np.random.randn(x.shape[0], ) for func in self.func_list]).T
         return obs
 
     # def observe(self, x):
