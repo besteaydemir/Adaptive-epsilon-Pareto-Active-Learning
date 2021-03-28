@@ -135,7 +135,7 @@ class AdaptiveEpsilonPAL:
             # printl(templist)
             for node in templist:
                 for pess_node in p_pess:
-                    #print(node.R_t.upper, pess_node.R_t.lower)
+                    print(node.R_t.upper, pess_node.R_t.lower)
                     if dominated_by(node.R_t.upper, pess_node.R_t.lower, self.epsilon):
                         print("dominated by")
                         self.s_t.remove(node)
@@ -159,7 +159,7 @@ class AdaptiveEpsilonPAL:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        print(node.R_t.lower,node.R_t.upper, w_node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         break
                 if belongs:
                     print("belongs")
@@ -183,7 +183,8 @@ class AdaptiveEpsilonPAL:
 
                 condition = np.sqrt(self.beta[self.t]) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
-                print(np.sqrt(self.beta[self.t]) * np.linalg.norm(sigma_unc))
+                print(np.sqrt(self.beta[self.t]))
+                print(np.linalg.norm(sigma_unc))
                 print(self.V[unc_node.h] * np.sqrt(self.problem_model.m))
                 #condition = True
 
@@ -236,7 +237,7 @@ class AdaptiveEpsilonPAL:
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.3
+        rho = 0.35
         alpha = 1
 
         m = self.problem_model.m
