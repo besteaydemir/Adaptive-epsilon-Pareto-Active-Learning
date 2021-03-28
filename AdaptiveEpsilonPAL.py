@@ -3,20 +3,40 @@ from Hyperrectangle import Hyperrectangle
 import numpy as np
 from utils import dominated_by
 import copy
+import time
 
 
 
 def pess(a):
+    # print("pesssss")
+    # printl(a)
     pess_set = []
     for i in range(len(a)):
+        # print("i", i)
         set_include = True
-        for j in range(i + 1, len(a)):
+        for j in range(len(a)):
+            if j == i:
+                continue
+            # print(len(a))
+            # print("j", j)
+            # print(a[i].R_t.get_lower())
+            # print(a[j].R_t.get_lower())
+            # print(np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()))
             if np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()):
                 set_include = False
+                # print("here")
+                break
+
+            #print(set_include)
+
+        # print("deciding for the node--------------------")
+        # print(set_include)
 
         if set_include:
             pess_set.append(a[i])
-
+    #     printl(pess_set)
+    # printl(a)
+    # print("returning")
     return pess_set
 
 
@@ -41,58 +61,70 @@ class AdaptiveEpsilonPAL:
         self.tau = 0  # Number of evaluation rounds
 
         self.p_t = []  # Predicted epsilon accurate Pareto set of nodes at round t
-        self.s_t = [Node(None, 1, [initial_hypercube], Hyperrectangle([-np.inf]*problem_model.m, [np.inf]*problem_model.m))]  # Undecided set of nodes at round t
+        self.s_t = [Node(None, 0, [initial_hypercube], Hyperrectangle([-np.inf]*problem_model.m, [np.inf]*problem_model.m))]  # Undecided set of nodes at round t
 
         self.V = [self.find_V(0)]
         self.beta = [0]
+        self.hmax = 0
 
     def algorithm(self):
         np.random.seed(134340)
-        while self.s_t:  # While s_t is not empty
+        t1 = time.time()
+        tau_change = True # Initial
+        while self.s_t and self.t < 500:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
+            print("hmax", self.hmax)
 
             print('s_t length')
             print(len(self.s_t))
             print("p_t length")
             print(len(self.p_t))
-            if self.p_t:
-                printl(self.p_t)
+            # if self.p_t:
+            #     printl(self.p_t)
             a_t = self.p_t + self.s_t  # Active nodes, union of sets s_t and p_t at the beginning of round t
             # print("a_t")
             # printl(a_t)
             p_pess = pess(a_t)  # Pessimistic Pareto set of A_t
-            # print("p_pess(a_t)")
-            # printl(p_pess)
+            print("p_pess(a_t)")
+            print(len(p_pess))
 
             "Modeling"
             print("Modeling")
             self.beta.append(self.find_beta(self.t))
             print("VH max", len(self.V) -1)
 
-            for node in a_t:
-                # Obtain mu_tau and sigma_tau of the node
-                mu_tau, sigma_tau = self.gp.inference(node.get_center())
+            # if len(self.V) < self.hmax + 1:
+            #     self.V.append(self.find_V(self.hmax))
 
-                if len(self.V) <= node.h:
-                    self.V.append(self.find_V(node.h))
 
-                if node.h == 0:
-                    V_h_1 = self.V[node.h]
-                else:
-                    V_h_1 = self.V[node.h - 1]
+            if True:
+                for node in a_t:
+                    # Obtain mu_tau and sigma_tau of the node
+                    mu_tau, sigma_tau = self.gp.inference(node.get_center())
 
-                mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
-                node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
-                                                 self.beta[self.t],
-                                                 self.V[node.h], V_h_1)
+                    if len(self.V) <= node.h:
+                        self.V.append(self.find_V(node.h))
+
+                    if node.h == 0:
+                        V_h_1 = self.V[node.h]
+                    else:
+                        V_h_1 = self.V[node.h - 1]
+
+
+                    mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
+                    node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
+                                                     self.beta[self.t],
+                                                     self.V[node.h], V_h_1)
 
             # print('s_t')
             # printl(self.s_t)
             # print("a_t")
             # printl(a_t)
 
+            print('s_t length before discard')
+            print(len(self.s_t))
 
             "Discarding"
             print("Discarding")
@@ -101,8 +133,9 @@ class AdaptiveEpsilonPAL:
             # printl(templist)
             for node in templist:
                 for pess_node in p_pess:
+                    #print(node.R_t.upper, pess_node.R_t.lower)
                     if dominated_by(node.R_t.upper, pess_node.R_t.lower, self.epsilon):
-                        print(node.R_t.upper, pess_node.R_t.lower)
+                        print("dominated by")
                         self.s_t.remove(node)
                         break
 
@@ -111,29 +144,28 @@ class AdaptiveEpsilonPAL:
 
 
             w_t = self.p_t + self.s_t  # The union of sets St and Pt at the end of the discarding phase of round t
-            # print('w_t')
-            # printl(w_t)
+            print('w_t')
+            print(len(w_t))
 
             "Epsilon Covering"
             print("epsilon Covering")
+            count = 0
             for node in self.s_t:
                 belongs = True
                 for w_node in w_t:
-                    print("e-cover")
-                    print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
-
                         belongs = False
+                        print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         break
                 if belongs:
+                    print("belongs")
                     self.s_t.remove(node)
                     self.p_t.append(node)
+            #print("count", count)
 
-            # print('s_t')
-            # printl(self.s_t)
-            # print('p_t')
-            # printl(self.p_t)
+            print('s_t after e covering')
+            print(len(self.s_t))
 
 
             "Refining / Evaluating"
@@ -153,19 +185,26 @@ class AdaptiveEpsilonPAL:
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
                     self.s_t = self.s_t + unc_node.reproduce()
+                    tau_change = False
                 elif condition and unc_node in self.p_t:
                     self.p_t.remove(unc_node)
                     self.p_t = self.p_t + unc_node.reproduce()
+                    tau_change = False
                 else:
                     y = self.problem_model.observe(unc_node.get_center())
                     # Update GP parameters
                     self.gp.update(unc_node.get_center(), y)
                     self.tau += 1
+                    tau_change = True
 
             self.t += 1
 
+        t2 = time.time()
+        print("time")
+        print(t2 - t1)
         pareto_cells = [node.hypercube_list for node in self.p_t]
         printl(self.p_t)
+
         return self.p_t, pareto_cells
 
     def find_beta(self, tau):
@@ -183,9 +222,12 @@ class AdaptiveEpsilonPAL:
 
         return (2 / 9) * np.log(m * card * np.pi ** 2 * tau ** 2 / (6 * delta))
 
+    def find_beta_tau(self, tau):
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**16 * (tau+1)**2 / (3*self.delta))
+
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.35
+        rho = 0.4
         alpha = 1
 
         m = self.problem_model.m
@@ -194,7 +236,7 @@ class AdaptiveEpsilonPAL:
         D_1 = self.problem_model.D_1
 
         # Constants associated with metric dimension D1
-        C_1 = np.sqrt(2 * self.problem_model.v / self.problem_model.L)
+        C_1 = np.sqrt(2 * self.problem_model.v) / self.problem_model.L
         C_k = C_1
         C_2 = 2 * np.log(2 * C_1 ** 2 * np.pi ** 2 / 6)
         C_3 = 0.91501 + 2.6945 * np.sqrt(2 * D_1 * alpha * np.log(2))  # eta_1 and eta_2 in the paper.

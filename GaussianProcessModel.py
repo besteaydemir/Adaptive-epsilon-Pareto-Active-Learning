@@ -16,6 +16,9 @@ class GaussianProcessModel:
         self.multi = multi
         self.m = m
 
+        self.variance_list = [] #list of size m
+        self.lengthscales_list = []
+
         self.kernel_list = kernel_list
 
         self.verbose = verbose
@@ -32,22 +35,30 @@ class GaussianProcessModel:
         opt = gpflow.optimizers.Scipy()
 
         for i in range(self.m):
-            print(self.Y[:,i].shape)
+            #print(self.Y[:,i].shape)  # Yshape problems
             kernel = self.kernel_list[i]
             m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel)
             print(m.log_marginal_likelihood())
 
-            # Tune the model parameters according to data
-            opt.minimize(
-                m.training_loss,
-                variables=m.trainable_variables,
-                method="l-bfgs-b",
-                options={"disp": False, "maxiter": 300}
-            )
+            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+                # Tune the model parameters according to data
+                opt.minimize(
+                    m.training_loss,
+                    variables=m.trainable_variables,
+                    method="l-bfgs-b",
+                    options={"disp": False, "maxiter": 300}
+                )
+                self.lengthscales_list.append(m.kernel.lengthscales)
+                self.variance_list.append(m.kernel.variance)
+
+            else:
+                m.kernel.lengthscales.assign(self.lengthscales_list[i])
+                m.kernel.variance.assign(self.variance_list[i])
+
 
             gp_list.append(m)
 
-            if self.verbose:
+            if True: #self.verbose:
                 print("For objective function ", i)
                 print_summary(m)
                 print("Log likelihood after optimization: ", tf.keras.backend.get_value(m.log_marginal_likelihood()))

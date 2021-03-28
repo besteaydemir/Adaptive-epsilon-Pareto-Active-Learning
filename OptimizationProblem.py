@@ -9,8 +9,8 @@ class OptimizationProblem:
         self.N = 2
         self.D_1 = 2
         self.alpha = 1
-        self.v = 10
-        self.L = 0.15
+        self.v = 7
+        self.L = 0.2
 
     def observe(self, x, std=0):
         obs = np.array([func(x) + std * np.random.randn(x.shape[0], ) for func in self.func_list]).T

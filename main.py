@@ -15,8 +15,8 @@ problem_model = OptimizationProblem(func_list)
 
 
 # Generate data
-data = np.random.randn(40, 2)  # Can be generated with opt problem instance for syn. data
-y = problem_model.observe(data, std=2)
+data = np.random.uniform(low=-1, high=1, size=(40, 2))   # Can be generated with opt problem instance for syn. data
+y = problem_model.observe(data, std=1)
 
 
 # Specify kernel and mean function for GP prior
@@ -28,4 +28,4 @@ gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, ve
 pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=0.10, delta=0.05, gp=gp,
                                                   initial_hypercube=Hypercube(1, (0.5, 0.5))).algorithm()
 
-print(pareto_set, pareto_set_cells)
+#printl(pareto_set)
