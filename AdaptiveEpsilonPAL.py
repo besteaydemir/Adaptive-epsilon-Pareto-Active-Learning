@@ -238,7 +238,7 @@ class AdaptiveEpsilonPAL:
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.35
+        rho = 0.5
         alpha = 1
 
         m = self.problem_model.m

@@ -49,14 +49,20 @@ class GaussianProcessModel:
                     method="l-bfgs-b",
                     options={"disp": False, "maxiter": 100}
                 )
-                self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
-                self.variance_list.append(m.kernel.base_kernel.variance)
-                self.kernelperiod_list.append(m.kernel.period)
+                # self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
+                # self.variance_list.append(m.kernel.base_kernel.variance)
+                # self.kernelperiod_list.append(m.kernel.period)
+
+                self.lengthscales_list.append(m.kernel.lengthscales)
+                self.variance_list.append(m.kernel.variance)
 
             else:
-                m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
-                m.kernel.base_kernel.variance.assign(self.variance_list[i])
-                m.kernel.period.assign(self.kernelperiod_list[i])
+                # m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
+                # m.kernel.base_kernel.variance.assign(self.variance_list[i])
+                # m.kernel.period.assign(self.kernelperiod_list[i])
+
+                m.kernel.lengthscales.assign(self.lengthscales_list[i])
+                m.kernel.variance.assign(self.variance_list[i])
 
 
             gp_list.append(m)

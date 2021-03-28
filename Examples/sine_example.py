@@ -40,12 +40,12 @@ y = problem_model.observe(data, std=0)
 
 
 # Specify kernel and mean function for GP prior
-kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.5, 0.5]
+kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
 gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, verbose=True)
 
 
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=2, delta=0.15, gp=gp,
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=10, delta=0.25, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
 
 print(pareto_set, pareto_set_cells)
