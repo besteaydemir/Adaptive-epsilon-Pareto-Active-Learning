@@ -45,7 +45,7 @@ gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, ve
 
 
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=1, delta=0.15, gp=gp,
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=2, delta=0.15, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
 
 print(pareto_set, pareto_set_cells)
