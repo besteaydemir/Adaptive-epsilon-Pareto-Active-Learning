@@ -40,7 +40,7 @@ y = problem_model.observe(data, std=0)
 
 
 # Specify kernel and mean function for GP prior
-kernel_list = [gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1]) for _ in range(2)]
+kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.5, 0.5]
 gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, verbose=True)
 
 

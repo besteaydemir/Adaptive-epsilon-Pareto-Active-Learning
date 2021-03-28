@@ -97,6 +97,8 @@ class AdaptiveEpsilonPAL:
 
             # if len(self.V) < self.hmax + 1:
             #     self.V.append(self.find_V(self.hmax))
+            #print('s_t before modeling')
+            #printl(self.s_t)
 
 
             if True:
@@ -118,8 +120,8 @@ class AdaptiveEpsilonPAL:
                                                      self.beta[self.t],
                                                      self.V[node.h], V_h_1)
 
-            # print('s_t')
-            # printl(self.s_t)
+            #print('s_t')
+            #printl(self.s_t)
             # print("a_t")
             # printl(a_t)
 
@@ -146,6 +148,7 @@ class AdaptiveEpsilonPAL:
             w_t = self.p_t + self.s_t  # The union of sets St and Pt at the end of the discarding phase of round t
             print('w_t')
             print(len(w_t))
+            # printl(w_t)
 
             "Epsilon Covering"
             print("epsilon Covering")
@@ -156,7 +159,7 @@ class AdaptiveEpsilonPAL:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        print(node.R_t.lower,node.R_t.upper, w_node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         break
                 if belongs:
                     print("belongs")
@@ -173,6 +176,8 @@ class AdaptiveEpsilonPAL:
             if self.s_t:  # If s_t is not empty
                 unc_node_ind = np.argmax(np.array([node.R_t.diameter for node in w_t]))
                 unc_node = w_t[unc_node_ind]
+                #print("unc_node")
+                #print(unc_node)
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
                 print(sigma_unc)
 
@@ -184,7 +189,11 @@ class AdaptiveEpsilonPAL:
 
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
-                    self.s_t = self.s_t + unc_node.reproduce()
+                    # print(unc_node)
+                    # print("reproduce")
+                    repro = unc_node.reproduce()
+                    # printl(repro)
+                    self.s_t = self.s_t + repro
                     tau_change = False
                 elif condition and unc_node in self.p_t:
                     self.p_t.remove(unc_node)
@@ -227,7 +236,7 @@ class AdaptiveEpsilonPAL:
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.4
+        rho = 0.3
         alpha = 1
 
         m = self.problem_model.m
@@ -250,7 +259,7 @@ class AdaptiveEpsilonPAL:
         term1 = np.sqrt(C_2 + 2 * log_term + h * np.log(N) +
                         np.maximum(0, -4 * (D_1 / alpha) * np.log(C_k * (v_1 * rho ** h) ** alpha))) + C_3
         term2 = 4 * C_k * (v_1 * rho ** h) ** alpha
-        print("vh for h", h, term1 * term2)
+        #print("vh for h", h, term1 * term2)
         return term2 * term1
 
 def printl(list):
