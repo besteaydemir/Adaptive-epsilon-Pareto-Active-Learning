@@ -71,7 +71,7 @@ class AdaptiveEpsilonPAL:
         np.random.seed(134340)
         t1 = time.time()
         tau_change = True # Initial
-        while self.s_t and self.t < 500:  # While s_t is not empty
+        while self.s_t:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
@@ -92,7 +92,7 @@ class AdaptiveEpsilonPAL:
 
             "Modeling"
             print("Modeling")
-            self.beta.append(self.find_beta(self.t))
+            #self.beta.append(self.find_beta(self.t))
             print("VH max", len(self.V) -1)
 
             # if len(self.V) < self.hmax + 1:
@@ -117,7 +117,8 @@ class AdaptiveEpsilonPAL:
 
                     mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
                     node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
-                                                     self.beta[self.t],
+                                                     #self.beta[self.t],
+                                                     self.find_beta_tau(self.tau),
                                                      self.V[node.h], V_h_1)
 
             #print('s_t')
@@ -181,9 +182,9 @@ class AdaptiveEpsilonPAL:
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
                 print(sigma_unc)
 
-                condition = np.sqrt(self.beta[self.t]) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
+                condition = np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
-                print(np.sqrt(self.beta[self.t]))
+                print(np.sqrt(self.find_beta_tau(self.tau)))
                 print(np.linalg.norm(sigma_unc))
                 print(self.V[unc_node.h] * np.sqrt(self.problem_model.m))
                 #condition = True
@@ -233,7 +234,7 @@ class AdaptiveEpsilonPAL:
         return (2 / 9) * np.log(m * card * np.pi ** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**16 * (tau+1)**2 / (3*self.delta))
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**10 * (tau+1)**2 / (3*self.delta))
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
