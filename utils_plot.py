@@ -24,12 +24,16 @@ def plot_func_list(list, range1, range2, title1, title2):
 
     return func_val1, func_val2
 
-def plot_pareto_front(func_val1, func_val2, mask):
+def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None):
     fig = plt.figure(figsize=(8, 5))
-    plt.rcParams["figure.dpi"] = 200
+    #plt.rcParams["figure.dpi"] = 200
     ax = plt.axes()
     ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=8, color='gray')
-    ax.scatter(func_val1[mask], func_val2[mask], s=8, color='red')
+    ax.scatter(func_val1[mask], func_val2[mask], s=8, color='g')
+
+    if (y1 is not None):
+        ax.scatter(y1, y2, s=10, color='red')
+
     ax.set_xlabel('$Objective 1$')
     ax.set_ylabel('$Objective 2$')
     plt.grid(True, linewidth=0.5, color='gray', linestyle='-')

@@ -34,18 +34,27 @@ mask = paretoset(hotels, sense=["max", "max"])
 plot_pareto_front(func_val1, func_val2, mask)
 
 
-# Generate synthetic data
-data = np.random.uniform(low=-1, high=1, size=(40, 2))  # Can be generated with opt problem instance for syn. data
-y = problem_model.observe(data, std=0)
+# # Generate synthetic data
+# data = np.random.uniform(low=-1, high=1, size=(40, 2))  # Can be generated with opt problem instance for syn. data
+# y = problem_model.observe(data, std=0)
+#
+#
+# # Specify kernel and mean function for GP prior
+# kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+# gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, verbose=True)
+#
+#
+# # Adaptive Epsilon PAL algorithm
+# pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=20, delta=0.25, gp=gp,
+#                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
+#
+# print(pareto_set, pareto_set_cells)
+
+#data_alg = np.array([[-0.625, -0.375], [0.1875, 0.8125], [0.1875, 0.9375], [0.375, 0.625], [-0.9375, -0.6875], [-0.9375, -0.5625], [-0.6875, -0.6875], [-0.6875, -0.5625]])
+data_alg2 = np.array([[-0.6875, -0.5625], [-0.1875, -0.8125], [-0.3125, -0.3125], [0.4375, 0.6875], [-0.5625, -0.5625], [0.6875, 0.4375], [0.5625, 0.5625],[0.3125, 0.3125], [0.4375, 0.3125],[0.5625, 0.4375], [-0.4375, -0.3125], [0.4375, 0.5625], [-0.4375, -0.5625], [0.4375, 0.4375], [-0.4375, -0.6875], [-0.3125, -0.6875],[-0.6875, -0.6875], [0.6875, 0.5625], [0.6875, 0.3125], [0.6875, 0.6875], [-0.6875, -0.3125], [0.3125, 0.6875], [-0.5625, -0.6875], [0.5625, 0.3125], [-0.5625, -0.4375],[-0.6875, -0.4375],[0.3125, 0.5625], [-0.4375, -0.4375], [-0.3125, -0.4375], [-0.3125, -0.5625], [-0.5625, -0.3125]])
 
 
-# Specify kernel and mean function for GP prior
-kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
-gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, verbose=True)
 
-
-# Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=10, delta=0.25, gp=gp,
-                                                  initial_hypercube=Hypercube(2, (0, 0))).algorithm()
-
-print(pareto_set, pareto_set_cells)
+y = problem_model.observe(data_alg2, std=0)
+print(y.shape)
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1])
