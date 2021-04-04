@@ -84,12 +84,14 @@ if __name__ == "__main__":
     np.random.seed(7)
 
     # creating processes
-    p1 = multiprocessing.Process(target=worker1, args=(2,))
-    p2 = multiprocessing.Process(target=worker1, args=(5,))
+    p1 = multiprocessing.Process(target=worker1, args=(0.5,))
+    p2 = multiprocessing.Process(target=worker1, args=(1,))
+    p3 = multiprocessing.Process(target=worker1, args=(5,))
 
     # starting processes
     p1.start()
     p2.start()
+    p3.start()
 
     # process IDs
     print("ID of process p1: {}".format(p1.pid))
@@ -98,6 +100,7 @@ if __name__ == "__main__":
     # wait until processes are finished
     p1.join()
     p2.join()
+    p3.join()
 
     # both processes finished
     print("Both processes finished execution!")
