@@ -9,7 +9,7 @@ from gpflow.utilities import print_summary
 
 
 class GaussianProcessModel:
-    def __init__(self, X, Y, multi, m, kernel_list, verbose=False):
+    def __init__(self, X, Y, multi, periodic, m, kernel_list, verbose=False):
         self.X = X
         self.Y = Y
 
@@ -19,6 +19,9 @@ class GaussianProcessModel:
         self.variance_list = [] #list of size m
         self.lengthscales_list = []
         self.kernelperiod_list = []
+
+        self.v = None
+        self.L = None
 
         self.kernel_list = kernel_list
 
@@ -41,7 +44,8 @@ class GaussianProcessModel:
             m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel)
             print(m.log_marginal_likelihood())
 
-            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            #if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            if True:
                 # Tune the model parameters according to data
                 opt.minimize(
                     m.training_loss,
@@ -49,20 +53,24 @@ class GaussianProcessModel:
                     method="l-bfgs-b",
                     options={"disp": False, "maxiter": 100}
                 )
-                # self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
-                # self.variance_list.append(m.kernel.base_kernel.variance)
-                # self.kernelperiod_list.append(m.kernel.period)
+                self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
+                self.variance_list.append(m.kernel.base_kernel.variance)
+                self.kernelperiod_list.append(m.kernel.period)
+                print(m.kernel.base_kernel.lengthscales)
+                print(m.kernel.base_kernel.lengthscales.numpy())
+                self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy())/2
+                self.v = self.variance_list[0].numpy()
 
-                self.lengthscales_list.append(m.kernel.lengthscales)
-                self.variance_list.append(m.kernel.variance)
+                # self.lengthscales_list.append(m.kernel.lengthscales)
+                # self.variance_list.append(m.kernel.variance)
 
             else:
-                # m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
-                # m.kernel.base_kernel.variance.assign(self.variance_list[i])
-                # m.kernel.period.assign(self.kernelperiod_list[i])
+                m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
+                m.kernel.base_kernel.variance.assign(self.variance_list[i])
+                m.kernel.period.assign(self.kernelperiod_list[i])
 
-                m.kernel.lengthscales.assign(self.lengthscales_list[i])
-                m.kernel.variance.assign(self.variance_list[i])
+                # m.kernel.lengthscales.assign(self.lengthscales_list[i])
+                # m.kernel.variance.assign(self.variance_list[i])
 
 
             gp_list.append(m)

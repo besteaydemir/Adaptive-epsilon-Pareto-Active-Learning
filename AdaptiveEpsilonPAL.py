@@ -1,7 +1,7 @@
 from Node import Node
 from Hyperrectangle import Hyperrectangle
 import numpy as np
-from utils import dominated_by
+from utils import dominated_by, printl
 import copy
 import time
 
@@ -41,10 +41,13 @@ def pess(a):
 
 
 def set_diff(s1, s2):
+    # printl(s1)
+    # printl(s2)
     tmp = copy.deepcopy(s1)
     for node in s2:
         if node in tmp:
             tmp.remove(node)
+    # printl(tmp)
     return tmp
 
 
@@ -132,11 +135,16 @@ class AdaptiveEpsilonPAL:
             "Discarding"
             print("Discarding")
             templist = set_diff(self.s_t, p_pess)
-            # print("set_diff(self.s_t, p_pess)")
+            # printl(self.s_t)
+            # printl(p_pess)
+            # print("set_diff(self.s_t, p_pess)------------------")
             # printl(templist)
+            count = 0
             for node in templist:
                 for pess_node in p_pess:
-                    print(node.R_t.upper, pess_node.R_t.lower)
+                    count += 1
+                    if count <= 5:
+                        print(node.R_t.upper, pess_node.R_t.lower)
                     if dominated_by(node.R_t.upper, pess_node.R_t.lower, self.epsilon):
                         print("dominated by")
                         self.s_t.remove(node)
@@ -153,14 +161,14 @@ class AdaptiveEpsilonPAL:
 
             "Epsilon Covering"
             print("epsilon Covering")
-            count = 0
+            counter = 0
             for node in self.s_t:
                 belongs = True
                 for w_node in w_t:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        #print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         break
                 if belongs:
                     print("belongs")
@@ -187,7 +195,6 @@ class AdaptiveEpsilonPAL:
                 print(np.sqrt(self.find_beta_tau(self.tau)))
                 print(np.linalg.norm(sigma_unc))
                 print(self.V[unc_node.h] * np.sqrt(self.problem_model.m))
-                #condition = True
 
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
@@ -214,7 +221,10 @@ class AdaptiveEpsilonPAL:
         print("time")
         print(t2 - t1)
         pareto_cells = [node.hypercube_list for node in self.p_t]
-        printl(self.p_t)
+
+        #node.hypercube_list[i]
+        #for i in range(len(node.hypercube_list))
+        #printl(self.p_t)
 
         return self.p_t, pareto_cells
 
@@ -247,7 +257,7 @@ class AdaptiveEpsilonPAL:
         D_1 = self.problem_model.D_1
 
         # Constants associated with metric dimension D1
-        C_1 = np.sqrt(2 * self.problem_model.v) / self.problem_model.L
+        C_1 = np.sqrt(2 * self.gp.v) / self.gp.L
         C_k = C_1
         C_2 = 2 * np.log(2 * C_1 ** 2 * np.pi ** 2 / 6)
         C_3 = 0.91501 + 2.6945 * np.sqrt(2 * D_1 * alpha * np.log(2))  # eta_1 and eta_2 in the paper.
@@ -264,10 +274,6 @@ class AdaptiveEpsilonPAL:
         #print("vh for h", h, term1 * term2)
         return term2 * term1
 
-def printl(list):
-    print("~~~~List begin~~~~~~~~~~~~~~~~~~~~~~~~~~" , len(list))
-    for node in list:
-        print(node)
-    print("~~~~List end~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
 
 

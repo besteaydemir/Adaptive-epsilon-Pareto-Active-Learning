@@ -5,6 +5,7 @@ from AdaptiveEpsilonPAL import AdaptiveEpsilonPAL
 from OptimizationProblem import OptimizationProblem
 from GaussianProcessModel import GaussianProcessModel
 from Hypercube import Hypercube
+from utils import printl
 
 from utils_plot import plot_func_list, plot_pareto_front
 
@@ -40,7 +41,7 @@ plot_pareto_front(func_val1, func_val2, mask)
 
 
 # Generate synthetic data
-data = np.random.uniform(low=-2, high=2, size=(40, 2))  # Can be generated with opt problem instance for syn. data
+data = np.random.uniform(low=0, high=1, size=(40, 2))  # Can be generated with opt problem instance for syn. data
 y = problem_model.observe(data, std=5)
 
 
@@ -50,11 +51,24 @@ gp = GaussianProcessModel(data, y, multi=False, m=2, kernel_list=kernel_list, ve
 
 
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=20, delta=0.25, gp=gp,
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=50, delta=0.25, gp=gp,
                                                   initial_hypercube=Hypercube(1, (0.5, 0.5))).algorithm()
 
 print(pareto_set, pareto_set_cells)
 
-# data_alg = np.array([[-0.625, -0.375], [0.1875, 0.8125], [0.1875, 0.9375], [0.375, 0.625], [-0.9375, -0.6875], [-0.9375, -0.5625], [-0.6875, -0.6875], [-0.6875, -0.5625]])
-# y = problem_model.observe(data_alg, std=0)
+# Print nodes in the Pareto set
+printl(pareto_set)
+
+# Get the center of each node in the Pareto set and plot after observing
+pareto_nodes_center = [node.get_center() for node in pareto_set]
+
+# Plot Pareto set
+y = problem_model.observe(np.squeeze(np.array(pareto_nodes_center)), std=0)
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1])
+
+#data_alg = np.array([[-0.625, -0.375], [0.1875, 0.8125], [0.1875, 0.9375], [0.375, 0.625], [-0.9375, -0.6875], [-0.9375, -0.5625], [-0.6875, -0.6875], [-0.6875, -0.5625]])
+# data_alg = np.array([[0.40625, 0.21875], [0.96875, 0.40625], [0.84375, 0.40625], [0.90625, 0.40625], [0.84375, 0.46875]])
+# data_alg = np.array([[0.21875, 0.65625], [0.21875, 0.71875]])
+
+# y = problem_model.observe(y, std=0)
 # plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1])

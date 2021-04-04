@@ -18,6 +18,9 @@ class Hypercube:
     def get_dimension(self):
         return len(self.center)
 
+    def get_center(self):
+        return self.center
+
     def __str__(self):
         return "Center: " + str(self.center) + ", Length: " + str(self.length)
 
