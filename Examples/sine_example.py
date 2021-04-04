@@ -12,7 +12,7 @@ from utils import printl
 from paretoset import paretoset
 import pandas as pd
 
-
+np.random.seed(7)
 # Generate the function lists
 func1 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) + 4 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
     2 * np.pi * x[:, 1]))/4
@@ -42,12 +42,12 @@ y = problem_model.observe(data, std=0)
 
 # Specify kernel and mean function for GP prior
 #kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.5, 0.5]
-kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.5, 0.5])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
 gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
 
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=1.5, delta=0.25, gp=gp,
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=5, delta=0.10, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
 
 # Print nodes in the Pareto set

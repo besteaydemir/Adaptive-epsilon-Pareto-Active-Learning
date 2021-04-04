@@ -44,8 +44,8 @@ class GaussianProcessModel:
             m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel)
             print(m.log_marginal_likelihood())
 
-            #if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
-            if True:
+            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+
                 # Tune the model parameters according to data
                 opt.minimize(
                     m.training_loss,

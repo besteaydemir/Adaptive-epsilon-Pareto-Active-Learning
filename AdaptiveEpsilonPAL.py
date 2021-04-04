@@ -244,7 +244,7 @@ class AdaptiveEpsilonPAL:
         return (2 / 9) * np.log(m * card * np.pi ** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**10 * (tau+1)**2 / (3*self.delta))
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**12 * (tau+1)**2 / (3*self.delta))
 
     def find_V(self, h):
         v_1 = np.sqrt(2)

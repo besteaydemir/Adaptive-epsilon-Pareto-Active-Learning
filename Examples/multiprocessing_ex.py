@@ -82,8 +82,8 @@ if __name__ == "__main__":
     print("ID of main process: {}".format(os.getpid()))
 
     # creating processes
-    p1 = multiprocessing.Process(target=worker1, args=(1,))
-    p2 = multiprocessing.Process(target=worker1, args=(5,))
+    p1 = multiprocessing.Process(target=worker1, args=(2,))
+    p2 = multiprocessing.Process(target=worker1, args=(1.5,))
 
     # starting processes
     p1.start()
