@@ -19,11 +19,12 @@ import pandas as pd
 
 
 def worker1(epsilon):
+    np.random.seed(134340)
     # Generate the function lists
     func1 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) + 4 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
-        2 * np.pi * x[:, 1])) / 4
+        2 * np.pi * x[:, 1])) / (81/16)
     func2 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) - 6 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
-        2 * np.pi * x[:, 1])) / 6
+        2 * np.pi * x[:, 1])) / (169/24)
     # func1 = lambda x: x[:, 0] ** 2 - (x[:, 1])
     # func2 = lambda x: (x[:, 1])**3 + x[:, 0] ** 2
     func_list = [func1, func2]
@@ -41,11 +42,11 @@ def worker1(epsilon):
 
     # Generate synthetic data
     data = np.random.uniform(low=-1, high=1, size=(40, 2))  # Can be generated with opt problem instance for syn. data
-    y = problem_model.observe(data, std=0)
+    y = problem_model.observe(data, std=0.1)
 
     # Specify kernel and mean function for GP prior
     # kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.5, 0.5]
-    kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.5, 0.5])) for _ in
+    kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[2, 2])) for _ in
                    range(2)]  # lengthscales=[0.5, 0.5]
     gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
@@ -80,10 +81,11 @@ def worker1(epsilon):
 if __name__ == "__main__":
     # printing main program process id
     print("ID of main process: {}".format(os.getpid()))
+    np.random.seed(7)
 
     # creating processes
     p1 = multiprocessing.Process(target=worker1, args=(2,))
-    p2 = multiprocessing.Process(target=worker1, args=(1.5,))
+    p2 = multiprocessing.Process(target=worker1, args=(5,))
 
     # starting processes
     p1.start()

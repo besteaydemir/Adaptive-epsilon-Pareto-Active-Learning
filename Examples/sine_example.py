@@ -12,12 +12,12 @@ from utils import printl
 from paretoset import paretoset
 import pandas as pd
 
-np.random.seed(7)
+np.random.seed(134340)
 # Generate the function lists
 func1 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) + 4 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
-    2 * np.pi * x[:, 1]))/4
+    2 * np.pi * x[:, 1]))/(81/16)
 func2 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) - 6 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
-    2 * np.pi * x[:, 1]))/6
+    2 * np.pi * x[:, 1]))/(169/24)
 # func1 = lambda x: x[:, 0] ** 2 - (x[:, 1])
 # func2 = lambda x: (x[:, 1])**3 + x[:, 0] ** 2
 func_list = [func1, func2]
@@ -47,7 +47,8 @@ gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=
 
 
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=5, delta=0.10, gp=gp,
+epsilon = 10
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.2, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
 
 # Print nodes in the Pareto set
@@ -73,4 +74,4 @@ pareto_nodes_center = [node.get_center() for node in pareto_set]
 a= np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 2)
 print(a.shape)
 y = problem_model.observe(a, std=0)
-plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1])
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=epsilon)
