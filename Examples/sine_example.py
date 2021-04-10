@@ -12,14 +12,13 @@ from utils import printl
 from paretoset import paretoset
 import pandas as pd
 
-np.random.seed(134340)
+np.random.seed(8)
+
 # Generate the function lists
 func1 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) + 4 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
     2 * np.pi * x[:, 1]))/(81/16)
 func2 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) - 6 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
     2 * np.pi * x[:, 1]))/(169/24)
-# func1 = lambda x: x[:, 0] ** 2 - (x[:, 1])
-# func2 = lambda x: (x[:, 1])**3 + x[:, 0] ** 2
 func_list = [func1, func2]
 problem_model = OptimizationProblem(func_list)
 
@@ -41,14 +40,14 @@ y = problem_model.observe(data, std=0)
 
 
 # Specify kernel and mean function for GP prior
-#kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.5, 0.5]
-kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+#kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
 gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
 
 # Adaptive Epsilon PAL algorithm
-epsilon = 10
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.2, gp=gp,
+epsilon = 1
+pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.1, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0))).algorithm()
 
 # Print nodes in the Pareto set

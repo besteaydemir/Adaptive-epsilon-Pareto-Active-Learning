@@ -71,10 +71,10 @@ class AdaptiveEpsilonPAL:
         self.hmax = 0
 
     def algorithm(self):
-        np.random.seed(134340)
+        np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
-        while self.s_t:  # While s_t is not empty
+        while self.s_t and self.tau < 150:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
@@ -168,7 +168,9 @@ class AdaptiveEpsilonPAL:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        #print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        if counter < 5:
+                            print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        counter += 1
                         break
                 if belongs:
                     print("belongs")
@@ -192,9 +194,9 @@ class AdaptiveEpsilonPAL:
 
                 condition = np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
-                print(np.sqrt(self.find_beta_tau(self.tau)))
-                print(np.linalg.norm(sigma_unc))
-                print(self.V[unc_node.h] * np.sqrt(self.problem_model.m))
+                print("beta", np.sqrt(self.find_beta_tau(self.tau)))
+                print("sigma", np.linalg.norm(sigma_unc))
+                print("V", self.V[unc_node.h] * np.sqrt(self.problem_model.m))
 
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
@@ -244,7 +246,7 @@ class AdaptiveEpsilonPAL:
         return (2 / 9) * np.log(m * card * np.pi ** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**12 * (tau+1)**2 / (3*self.delta))
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**10 * (tau+1)**2 / (3*self.delta))
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
@@ -258,6 +260,7 @@ class AdaptiveEpsilonPAL:
 
         # Constants associated with metric dimension D1
         C_1 = np.sqrt(2 * self.gp.v) / self.gp.L
+        print("c1", C_1)
         C_k = C_1
         C_2 = 2 * np.log(2 * C_1 ** 2 * np.pi ** 2 / 6)
         C_3 = 0.91501 + 2.6945 * np.sqrt(2 * D_1 * alpha * np.log(2))  # eta_1 and eta_2 in the paper.

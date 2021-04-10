@@ -41,10 +41,11 @@ class GaussianProcessModel:
         for i in range(self.m):
             #print(self.Y[:,i].shape)  # Yshape problems
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.1)
             print(m.log_marginal_likelihood())
 
             if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            #if True:
 
                 # Tune the model parameters according to data
                 opt.minimize(
@@ -53,24 +54,27 @@ class GaussianProcessModel:
                     method="l-bfgs-b",
                     options={"disp": False, "maxiter": 100}
                 )
-                self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
-                self.variance_list.append(m.kernel.base_kernel.variance)
-                self.kernelperiod_list.append(m.kernel.period)
-                print(m.kernel.base_kernel.lengthscales)
-                print(m.kernel.base_kernel.lengthscales.numpy())
-                self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy())/2
+                # self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
+                # self.variance_list.append(m.kernel.base_kernel.variance)
+                # self.kernelperiod_list.append(m.kernel.period)
+
+
+                self.lengthscales_list.append(m.kernel.lengthscales)
+                self.variance_list.append(m.kernel.variance)
+
+                print(m.kernel.lengthscales)
+                print(m.kernel.lengthscales.numpy())
+                self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy()) / 2
+                #self.L = self.lengthscales_list[0].numpy()
                 self.v = self.variance_list[0].numpy()
 
-                # self.lengthscales_list.append(m.kernel.lengthscales)
-                # self.variance_list.append(m.kernel.variance)
-
             else:
-                m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
-                m.kernel.base_kernel.variance.assign(self.variance_list[i])
-                m.kernel.period.assign(self.kernelperiod_list[i])
+                # m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
+                # m.kernel.base_kernel.variance.assign(self.variance_list[i])
+                # m.kernel.period.assign(self.kernelperiod_list[i])
 
-                # m.kernel.lengthscales.assign(self.lengthscales_list[i])
-                # m.kernel.variance.assign(self.variance_list[i])
+                m.kernel.lengthscales.assign(self.lengthscales_list[i])
+                m.kernel.variance.assign(self.variance_list[i])
 
 
             gp_list.append(m)
@@ -95,7 +99,7 @@ class GaussianProcessModel:
             #todo
         else:
             for i, gp in enumerate(self.model):
-                mus[i], var[i] = gp.predict_y(x)
+                mus[i], var[i] = gp.predict_f(x)
 
         return mus, np.sqrt(var)
 
