@@ -28,7 +28,7 @@ def plot_func_list(list, range1, range2, title1, title2, h = None):
 
     return func_val1, func_val2
 
-def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=None):
+def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=None, plotfront = False):
     fig = plt.figure(figsize=(8, 5))
     #plt.rcParams["figure.dpi"] = 400
     ax = plt.axes()
@@ -53,14 +53,15 @@ def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=No
         func_val1sorted = np.sort(y1)
         func_val2sorted = np.sort(y2)[::-1]
         ax.scatter(y1, y2, s=8, color='red')
-        for i in range(y1.shape[0] - 1):
-            x_values = [func_val1sorted[i], func_val1sorted[i]]
-            y_values = [func_val2sorted[i], func_val2sorted[i + 1]]
-            plt.plot(x_values, y_values, color='lightcoral')
+        if plotfront:
+            for i in range(y1.shape[0] - 1):
+                x_values = [func_val1sorted[i], func_val1sorted[i]]
+                y_values = [func_val2sorted[i], func_val2sorted[i + 1]]
+                plt.plot(x_values, y_values, color='lightcoral')
 
-            x_values = [func_val1sorted[i], func_val1sorted[i + 1]]
-            y_values = [func_val2sorted[i + 1], func_val2sorted[i + 1]]
-            plt.plot(x_values, y_values, color='lightcoral')
+                x_values = [func_val1sorted[i], func_val1sorted[i + 1]]
+                y_values = [func_val2sorted[i + 1], func_val2sorted[i + 1]]
+                plt.plot(x_values, y_values, color='lightcoral')
 
     ax.set_xlabel('$Objective 1$')
     ax.set_ylabel('$Objective 2$')

@@ -71,6 +71,8 @@ class AdaptiveEpsilonPAL:
         self.beta = [0]
         self.hmax = 0
 
+        self.time_elapsed = 0
+
 
     def algorithm(self):
         np.random.seed(7)
@@ -233,6 +235,7 @@ class AdaptiveEpsilonPAL:
         plt.title("Posterior Std. Dev.")
 
         t2 = time.time()
+        self.time_elapsed = t2-t1
         print("time")
         print(t2 - t1)
         pareto_cells = [node.hypercube_list for node in self.p_t]

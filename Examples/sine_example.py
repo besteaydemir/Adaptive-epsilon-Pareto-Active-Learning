@@ -31,7 +31,7 @@ func_val1, func_val2 = plot_func_list(func_list, (-1, 1), (-1, 1), title1, title
 # Plot pareto front (two functions)
 hotels = pd.DataFrame({"price": func_val1, "distance_to_beach": func_val2})
 mask = paretoset(hotels, sense=["max", "max"])
-plot_pareto_front(func_val1, func_val2, mask)
+plot_pareto_front(func_val1, func_val2, mask, plotfront=True)
 
 
 # Generate synthetic data
@@ -46,11 +46,14 @@ gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=
 
 
 # Adaptive Epsilon PAL algorithm
-epsilon = 1
+epsilon = 100
 alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.1, gp=gp,
                                                   initial_hypercube=Hypercube(2, (0, 0)))
 pareto_set, pareto_set_cells = alg_object.algorithm()
 hmax = alg_object.hmax
+time_elapsed = alg_object.time_elapsed
+tau_eval = alg_object.tau
+t_eval = alg_object.t
 
 # Print nodes in the Pareto set
 printl(pareto_set)
@@ -96,6 +99,7 @@ for row in p_set:
     # print(b)
     c += np.min(b)
 
-title = "$\epsilon = $" + str(epsilon) + " Error = ", str(c / p_set.shape[0])
-plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=title)
+title = "$\epsilon = $" + '%.2f' % epsilon + ", Error = " + '%.3f' % (c / p_set.shape[0]) + r'$, \tau $ :' + str(tau_eval) + ", Time(s) :" + '%.3f' % time_elapsed
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=title, plotfront = True)
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=title, plotfront = False)
 
