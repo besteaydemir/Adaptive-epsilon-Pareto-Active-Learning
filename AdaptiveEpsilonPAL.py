@@ -1,6 +1,7 @@
 from Node import Node
 from Hyperrectangle import Hyperrectangle
 import numpy as np
+import matplotlib.pyplot as plt
 from utils import dominated_by, printl
 import copy
 import time
@@ -70,10 +71,12 @@ class AdaptiveEpsilonPAL:
         self.beta = [0]
         self.hmax = 0
 
+
     def algorithm(self):
         np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
+        sigmas = np.empty((1500,))
         while self.s_t and self.tau < 150:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
@@ -111,6 +114,7 @@ class AdaptiveEpsilonPAL:
 
                     if len(self.V) <= node.h:
                         self.V.append(self.find_V(node.h))
+                        self.hmax += 1
 
                     if node.h == 0:
                         V_h_1 = self.V[node.h]
@@ -187,15 +191,18 @@ class AdaptiveEpsilonPAL:
             if self.s_t:  # If s_t is not empty
                 unc_node_ind = np.argmax(np.array([node.R_t.diameter for node in w_t]))
                 unc_node = w_t[unc_node_ind]
-                #print("unc_node")
-                #print(unc_node)
+                print("unc_node")
+                print(unc_node)
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
                 print(sigma_unc)
+
+                sigmas[self.t] = np.linalg.norm(sigma_unc)
 
                 condition = np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
                 print("beta", np.sqrt(self.find_beta_tau(self.tau)))
                 print("sigma", np.linalg.norm(sigma_unc))
+                print("beta*sigma", np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc))
                 print("V", self.V[unc_node.h] * np.sqrt(self.problem_model.m))
 
                 if condition and unc_node in self.s_t:
@@ -218,6 +225,12 @@ class AdaptiveEpsilonPAL:
                     tau_change = True
 
             self.t += 1
+        plt.figure()
+        ax = plt.axes()
+        ax.plot(range(self.t), sigmas[:self.t])
+        ax.set_xlabel('$t$')
+        ax.set_ylabel('$\sigma$')
+        plt.title("Posterior Std. Dev.")
 
         t2 = time.time()
         print("time")
@@ -243,7 +256,7 @@ class AdaptiveEpsilonPAL:
         card = self.problem_model.cardinality  # Cardinality of the design space.
         delta = self.delta
 
-        return (2 / 9) * np.log(m * card * np.pi ** 2 * tau ** 2 / (6 * delta))
+        return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
         return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**10 * (tau+1)**2 / (3*self.delta))
