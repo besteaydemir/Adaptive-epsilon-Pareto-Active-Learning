@@ -84,8 +84,6 @@ plot_pareto_front(func_val1, func_val2, mask)
 a= np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 2)
 print(a.shape)
 y = problem_model.observe(a, std=0)
-title = "$\epsilon = $" + str(epsilon)
-plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=title)
 
 # Error metric
 p_set = np.hstack((func_val1, func_val2))
@@ -97,4 +95,7 @@ for row in p_set:
     # print("b")
     # print(b)
     c += np.min(b)
-print("error", c / p_set.shape[0])
+
+title = "$\epsilon = $" + str(epsilon) + " Error = ", str(c / p_set.shape[0])
+plot_pareto_front(func_val1, func_val2, mask, y[:,0], y[:,1], title=title)
+
