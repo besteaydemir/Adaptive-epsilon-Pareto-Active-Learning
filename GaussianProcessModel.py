@@ -41,11 +41,11 @@ class GaussianProcessModel:
         for i in range(self.m):
             #print(self.Y[:,i].shape)  # Yshape problems
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.05)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.1)
             print(m.log_marginal_likelihood())
 
-            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
-            #if True:
+            #if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            if True:
 
                 # Tune the model parameters according to data
                 opt.minimize(

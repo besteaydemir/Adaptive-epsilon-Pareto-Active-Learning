@@ -127,7 +127,7 @@ class AdaptiveEpsilonPAL:
                     mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
                     node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
                                                      #self.beta[self.t],
-                                                     self.find_beta_tau(self.tau),
+                                                     self.find_beta(self.t),
                                                      self.V[node.h], V_h_1)
 
             #print('s_t')
@@ -200,11 +200,11 @@ class AdaptiveEpsilonPAL:
 
                 sigmas[self.t] = np.linalg.norm(sigma_unc)
 
-                condition = np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
+                condition = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
-                print("beta", np.sqrt(self.find_beta_tau(self.tau)))
+                print("beta", np.sqrt(self.find_beta(self.t)))
                 print("sigma", np.linalg.norm(sigma_unc))
-                print("beta*sigma", np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc))
+                print("beta*sigma", np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc))
                 print("V", self.V[unc_node.h] * np.sqrt(self.problem_model.m))
 
                 if condition and unc_node in self.s_t:

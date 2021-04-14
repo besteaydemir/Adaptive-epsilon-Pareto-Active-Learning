@@ -50,7 +50,6 @@ def worker1(epsilon):
     gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
     # Adaptive Epsilon PAL algorithm
-    epsilon = 1
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.1, gp=gp,
                                     initial_hypercube=Hypercube(2, (0, 0)))
     pareto_set, pareto_set_cells = alg_object.algorithm()

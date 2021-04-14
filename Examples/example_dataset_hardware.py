@@ -17,9 +17,9 @@ np.random.seed(10)
 data = pd.read_csv("data.txt", sep=';', header = None).to_numpy()
 
 # Standardize the design space and the objectives
-scaler = preprocessing.MinMaxScaler()
-data[:, :3] = scaler.fit_transform(data[:, :3])
-data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:])
+# scaler = preprocessing.MinMaxScaler()
+# data[:, :3] = scaler.fit_transform(data[:, :3])
+# data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:])
 
 # Randomly choose 40 instances to use in GP initialization, sample from the rest
 rng = np.random.default_rng()
@@ -59,31 +59,37 @@ sample_split = data[40:]
 problem_model = OptimizationProblem(dataset=(sample_split[:, :3], sample_split[:, 3:]))
 
 # Specify kernel and mean function for GP prior
-kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.5, 0.5, 0.5])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[10, 10, 10])) for _ in range(2)] # lengthscales=[0.5, 0.5]
 gp = GaussianProcessModel(gp_split[:, :3], gp_split[:, 3:], multi=False, periodic=False, m=2, kernel_list=kernel_list, verbose=True)
 
-
 # Adaptive Epsilon PAL algorithm
-pareto_set, pareto_set_cells = AdaptiveEpsilonPAL(problem_model, epsilon=0.05, delta=0.15, gp=gp,
-                                                  initial_hypercube=Hypercube(1, (0.5, 0.5, 0.5))).algorithm()
+epsilon = 0.1
+alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.05, gp=gp,
+                                                  initial_hypercube=Hypercube(32, (4, 32, 2.5)))
+pareto_set, pareto_set_cells = alg_object.algorithm()
+hmax = alg_object.hmax
+time_elapsed = alg_object.time_elapsed
+tau_eval = alg_object.tau
+t_eval = alg_object.t
+
+# Print nodes in the Pareto set
 printl(pareto_set)
+
 # Get the center of each node in the Pareto set and plot after observing
 pareto_nodes_center = [node.get_center() for node in pareto_set]
 
-# Print the cell centers of the the Pareto node cells
-# print([[cell.get_center() for cell in cells] for cells in pareto_set_cells])
-# print(np.array([[cell.get_center() for cell in cells] for cells in pareto_set_cells]))
-# print(np.array(pareto_nodes_center))
+
+# # Plot pareto front (two functions)
+# hotels = pd.DataFrame({"price": func_val1, "distance_to_beach": func_val2})
+# mask = paretoset(hotels, sense=["max", "max"])
+# plot_pareto_front(func_val1, func_val2, mask)
+#
+# a= np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 2)
+# print(a.shape)
+# y = problem_model.observe(a, std=0)
+#
 
 
-
-#data_alg = np.array([[-0.625, -0.375], [0.1875, 0.8125], [0.1875, 0.9375], [0.375, 0.625], [-0.9375, -0.6875], [-0.9375, -0.5625], [-0.6875, -0.6875], [-0.6875, -0.5625]])
-#data_alg2 = np.array([[-0.6875, -0.5625], [-0.1875, -0.8125], [-0.3125, -0.3125], [0.4375, 0.6875], [-0.5625, -0.5625], [0.6875, 0.4375], [0.5625, 0.5625],[0.3125, 0.3125], [0.4375, 0.3125],[0.5625, 0.4375], [-0.4375, -0.3125], [0.4375, 0.5625], [-0.4375, -0.5625], [0.4375, 0.4375], [-0.4375, -0.6875], [-0.3125, -0.6875],[-0.6875, -0.6875], [0.6875, 0.5625], [0.6875, 0.3125], [0.6875, 0.6875], [-0.6875, -0.3125], [0.3125, 0.6875], [-0.5625, -0.6875], [0.5625, 0.3125], [-0.5625, -0.4375],[-0.6875, -0.4375],[0.3125, 0.5625], [-0.4375, -0.4375], [-0.3125, -0.4375], [-0.3125, -0.5625], [-0.5625, -0.3125]])
-
-
-#print(np.squeeze(np.array(pareto_nodes_center)).shape)
-
-# Plot Pareto set
 
 
 # Plot Pareto set
@@ -113,14 +119,30 @@ for row in a:
     i += 1
 
 
-# Visualize the functions (two functions)
-#title1 = "Objective 1$"
-#title1 = "Six-Hump Camel Back (Neg)"
-#title2 = "Objective 2"
-#func_val1, func_val2 = plot_func_list(func_list, (0, 1), (0, 1), title1, title2)
-
 # Plot pareto front (two functions)
-hotels = pd.DataFrame({"price": data[:, 3], "distance_to_beach": data[:, 4]})
+hotels = pd.DataFrame({"price": sample_split[:, 3], "distance_to_beach": sample_split[:, 4]})
 mask = paretoset(hotels, sense=["max", "max"])
-plot_pareto_front(data[:, 3], data[:, 4], mask, y_obs[:,0], y_obs[:,1])
+
+
+# Error metric
+p_set = np.hstack((sample_split[:, 3][mask].reshape(-1,1), sample_split[:, 4][mask].reshape(-1,1)))
+print(p_set)
+c = 0
+for row in p_set:
+    #row =
+    print(row)
+    a = y_obs-row
+    print(a)
+    b = np.linalg.norm(a, axis=1)
+    print(b)
+    c += np.min(b)
+    print(c)
+    print("ended")
+print(p_set.shape[0])
+
+
+title = "$\epsilon = $" + '%.2f' % epsilon + ", Error = " + '%.3f' % (c / p_set.shape[0]) + r'$, \tau $ :' + str(tau_eval) + ", Time(s) :" + '%.3f' % time_elapsed
+
+plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:,0], y_obs[:,1], title=title, plotfront = True)
+plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:,0], y_obs[:,1], title=title, plotfront = False)
 
