@@ -35,17 +35,18 @@ class GaussianProcessModel:
 
 
     def gp_list(self):
+        np.random.seed(134340)
         gp_list = []
         opt = gpflow.optimizers.Scipy()
 
         for i in range(self.m):
             #print(self.Y[:,i].shape)  # Yshape problems
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.1)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.01)
             print(m.log_marginal_likelihood())
 
-            #if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
-            if True:
+            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            #if True:
 
                 # Tune the model parameters according to data
                 opt.minimize(
@@ -64,9 +65,7 @@ class GaussianProcessModel:
 
                 print(m.kernel.lengthscales)
                 print(m.kernel.lengthscales.numpy())
-                self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy()) / 2
-                #self.L = self.lengthscales_list[0].numpy()
-                self.v = self.variance_list[0].numpy()
+
 
             else:
                 # m.kernel.base_kernel.lengthscales.assign(self.lengthscales_list[i])
@@ -83,6 +82,10 @@ class GaussianProcessModel:
                 print("For objective function ", i)
                 print_summary(m)
                 print("Log likelihood after optimization: ", tf.keras.backend.get_value(m.log_marginal_likelihood()))
+
+        #self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy() + self.lengthscales_list[0][0].numpy() + self.lengthscales_list[0][0].numpy()) / 2
+        self.L = (self.lengthscales_list[0].numpy() + self.lengthscales_list[1].numpy()) / 2
+        self.v = (self.variance_list[0].numpy() + self.variance_list[1].numpy()) / 2
 
         return gp_list
 

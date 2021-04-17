@@ -86,9 +86,3 @@ class Node:
         # Cumulative confidence hyper-rectangle, R
         self.R_t = self.R_t.intersect(Q)
 
-
-    # def gp_inference(self, gp):
-    #     self.mu, self.sigma = gp.predict_y(self.return_center())
-    #     return self.mu, self.sigma
-
-    # with also gp list

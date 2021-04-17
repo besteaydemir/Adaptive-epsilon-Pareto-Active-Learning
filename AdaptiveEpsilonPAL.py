@@ -70,6 +70,8 @@ class AdaptiveEpsilonPAL:
         self.V = [self.find_V(0)]
         self.beta = [0]
         self.hmax = 0
+        self.hmax_len = 0
+        self.t_tau = []
 
         self.time_elapsed = 0
 
@@ -78,8 +80,9 @@ class AdaptiveEpsilonPAL:
         np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
-        sigmas = np.empty((1500,))
-        while self.s_t and self.tau < 150:  # While s_t is not empty
+        sigmas = np.ones((1500,))
+        conf_diameter = np.ones((1500,))
+        while self.s_t:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
@@ -117,6 +120,7 @@ class AdaptiveEpsilonPAL:
                     if len(self.V) <= node.h:
                         self.V.append(self.find_V(node.h))
                         self.hmax += 1
+                        self.hmax_len = node.hypercube_list[0].length
 
                     if node.h == 0:
                         V_h_1 = self.V[node.h]
@@ -191,8 +195,11 @@ class AdaptiveEpsilonPAL:
             "Refining / Evaluating"
             print("refining evaluating")
             if self.s_t:  # If s_t is not empty
+                # print("look here")
+                # print(np.array([node.R_t.diameter for node in w_t]))
                 unc_node_ind = np.argmax(np.array([node.R_t.diameter for node in w_t]))
                 unc_node = w_t[unc_node_ind]
+                conf_diameter[self.t] = unc_node.R_t.diameter
                 print("unc_node")
                 print(unc_node)
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
@@ -220,19 +227,37 @@ class AdaptiveEpsilonPAL:
                     self.p_t = self.p_t + unc_node.reproduce()
                     tau_change = False
                 else:
-                    y = self.problem_model.observe(unc_node.get_center())
+                    y = self.problem_model.observe(unc_node.get_center(), std= 0.05)
                     # Update GP parameters
                     self.gp.update(unc_node.get_center(), y)
+                    self.t_tau.append(self.t)
                     self.tau += 1
                     tau_change = True
 
             self.t += 1
         plt.figure()
         ax = plt.axes()
-        ax.plot(range(self.t), sigmas[:self.t])
+        ax.plot(range(1,self.t-1), sigmas[1:self.t-1], label = r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+        print("herere")
+        print(self.t_tau)
+        ax.scatter(self.t_tau, sigmas[self.t_tau], color = 'red', label=r"$\tau$")
         ax.set_xlabel('$t$')
-        ax.set_ylabel('$\sigma$')
-        plt.title("Posterior Std. Dev.")
+        ax.set_ylabel(r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+        ax.legend()
+        plt.title(r"Posterior Variance after $\tau$ Evaluations")
+
+        #print(conf_diameter[:self.t])
+
+        plt.figure()
+        ax = plt.axes()
+        ax.plot(range(1,self.t-1), conf_diameter[1:self.t-1], label='$\omega_t(x_{h_t,i_t})$')
+        ax.set_yscale('log')
+        ax.set_xlabel('$t$')
+        ax.set_ylabel('$\omega_t(x_{h_t,i_t})$')
+        plt.axhline(self.epsilon, color='red', label='$\epsilon$')
+        ax.legend()
+        plt.title("Diameter of the Cumulative Confidence \n Hyper-rectangle of the Most Uncertain Node")
+
 
         t2 = time.time()
         self.time_elapsed = t2-t1
