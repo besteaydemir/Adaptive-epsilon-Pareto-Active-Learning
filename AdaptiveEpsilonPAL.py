@@ -77,12 +77,12 @@ class AdaptiveEpsilonPAL:
 
 
     def algorithm(self):
-        np.random.seed(7)
+        #np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
         sigmas = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t and self.t < 800:  # While s_t is not empty
+        while self.s_t :  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
@@ -131,7 +131,7 @@ class AdaptiveEpsilonPAL:
                     mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
                     node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
                                                      #self.beta[self.t],
-                                                     self.find_beta_tau(self.tau),
+                                                     self.find_beta(self.t),
                                                      self.V[node.h], V_h_1)
 
             #print('s_t')
@@ -207,9 +207,9 @@ class AdaptiveEpsilonPAL:
 
                 sigmas[self.t] = np.linalg.norm(sigma_unc)
 
-                condition = np.sqrt(self.find_beta_tau(self.tau)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
+                condition = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
-                print("beta", np.sqrt(self.find_beta_tau(self.tau)))
+                print("beta", np.sqrt(self.find_beta(self.t)))
                 print("sigma", np.linalg.norm(sigma_unc))
                 print("beta*sigma", np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc))
                 print("V", self.V[unc_node.h] * np.sqrt(self.problem_model.m))
@@ -227,7 +227,7 @@ class AdaptiveEpsilonPAL:
                     self.p_t = self.p_t + unc_node.reproduce()
                     tau_change = False
                 else:
-                    y = self.problem_model.observe(unc_node.get_center(), std= 0.05)
+                    y = self.problem_model.observe(unc_node.get_center(), std= 0.5)
                     # Update GP parameters
                     self.gp.update(unc_node.get_center(), y)
                     self.t_tau.append(self.t)

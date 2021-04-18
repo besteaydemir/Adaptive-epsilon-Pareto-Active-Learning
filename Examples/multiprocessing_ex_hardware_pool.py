@@ -1,6 +1,7 @@
 # importing the multiprocessing module
 import multiprocessing
 import os
+import time
 import numpy as np
 import gpflow as gpf
 
@@ -47,10 +48,14 @@ def worker1(epsilon):
     #data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:])
 
     # Randomly choose 40 instances to use in GP initialization, sample from the rest
-    rng = np.random.default_rng()
-    rng.shuffle(data, axis=0)
+    # rng = np.random.default_rng(7)
+    # rng.shuffle(data, axis=0)
+    np.random.shuffle(data)
     gp_split = data[:20]
     sample_split = data[20:]
+
+    t = 1000 * time.time()  # current time in milliseconds
+    np.random.seed(int(t) % 2 ** 32)
 
     problem_model = OptimizationProblem(dataset=(sample_split[:, :3], sample_split[:, 3:]))
 
@@ -167,19 +172,19 @@ def worker1(epsilon):
 if __name__ == "__main__":
     # printing main program process id
     print("ID of main process: {}".format(os.getpid()))
-    np.random.seed(9)
+    #np.random.seed(9)
 
-    pool = multiprocessing.Pool(processes=2)
-    p = pool.map(worker1, [5, 5, 5])
-    np.savetxt("name5.txt", np.asarray(p))
+    # pool = multiprocessing.Pool(processes=2)
+    # p = pool.map(worker1, [5, 5, 5])
+    # np.savetxt("name5.txt", np.asarray(p))
+    #
+    # pool2 = multiprocessing.Pool(processes=2)
+    # p2 = pool2.map(worker1, [1.5, 1.5, 1.5])
+    # np.savetxt("name1_5.txt", np.asarray(p2))
 
-    pool2 = multiprocessing.Pool(processes=2)
-    p2 = pool2.map(worker1, [1.5, 1.5, 1.5])
-    np.savetxt("name1_5.txt", np.asarray(p2))
-
-    pool3 = multiprocessing.Pool(processes=2)
-    p3 = pool3.map(worker1, [0.5, 0.5, 0.5])
-    np.savetxt("name0_5.txt", np.asarray(p3))
+    pool3 = multiprocessing.Pool(processes=3)
+    p3 = pool3.map(worker1, [0.15, 0.15, 0.15])
+    np.savetxt("name0_15.txt", np.asarray(p3))
 
 
 

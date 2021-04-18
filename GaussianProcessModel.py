@@ -35,7 +35,7 @@ class GaussianProcessModel:
 
 
     def gp_list(self):
-        np.random.seed(134340)
+        #np.random.seed(134340)
         gp_list = []
         opt = gpflow.optimizers.Scipy()
 

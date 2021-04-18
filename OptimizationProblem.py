@@ -9,9 +9,9 @@ class OptimizationProblem:
         self.m = 2
         if scaler is not None:
             self.scaler =scaler
-        self.cardinality = 166
+        self.cardinality = 186
         self.N = 2
-        self.D_1 = 2
+        self.D_1 = 3
         self.alpha = 1
 
         if dataset is not None:
