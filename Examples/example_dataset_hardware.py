@@ -14,7 +14,7 @@ from utils_plot import plot_func_list, plot_pareto_front
 
 
 # Set seed for reproducibility
-np.random.seed(10)
+np.random.seed(7)
 
 # Load the dataset into a data frame
 data = pd.read_csv("data.txt", sep=';', header = None).to_numpy()
@@ -22,19 +22,19 @@ data = pd.read_csv("data.txt", sep=';', header = None).to_numpy()
 # Standardize the design space and the objectives
 scaler = preprocessing.MinMaxScaler()
 data[:, :3] = scaler.fit_transform(data[:, :3])
-data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:])
+#data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:])
 
 # Randomly choose 40 instances to use in GP initialization, sample from the rest
 rng = np.random.default_rng()
 rng.shuffle(data, axis = 0)
-gp_split = data[:40]
-sample_split = data[40:]
+gp_split = data[:20]
+sample_split = data[20:]
 
 
 problem_model = OptimizationProblem(dataset=(sample_split[:, :3], sample_split[:, 3:]))
 
 # Specify kernel and mean function for GP prior
-kernel_list = [(gpf.kernels.SquaredExponential(0.1)) for _ in range(2)] # lengthscales=[0.1, 0.1, 0.1]
+kernel_list = [(gpf.kernels.SquaredExponential()) for _ in range(2)] # lengthscales=[0.1, 0.1, 0.1]
 gp = GaussianProcessModel(X=gp_split[:, :3], Y=gp_split[:, 3:], multi=False, periodic=False, m=2, kernel_list=kernel_list, verbose=True)
 
 # Adaptive Epsilon PAL algorithm
@@ -61,7 +61,7 @@ pareto_nodes_center = [node.get_center() for node in pareto_set]
 
 # Plot Pareto set
 a = np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 3)
-
+print("hereobs")
 y_obs = np.empty((a.shape[0], 2))
 i = 0
 for row in a:
@@ -69,7 +69,7 @@ for row in a:
     y = problem_model.observe(data_alg, std=0)
     y_obs[i, :] = y
     i += 1
-
+print(y_obs)
 
 # Plot pareto front (two functions)
 hotels = pd.DataFrame({"price": sample_split[:, 3], "distance_to_beach": sample_split[:, 4]})
@@ -110,7 +110,7 @@ for node in pareto_set:
 cells = [hypercube.get_center() for hypercube in cell_list]
 # Plot Pareto set
 a = np.squeeze(np.array(cells)).reshape(-1, 3)
-
+print("hereobs2")
 y_obs = np.empty((a.shape[0], 2))
 i = 0
 for row in a:
@@ -118,7 +118,7 @@ for row in a:
     y = problem_model.observe(data_alg, std=0)
     y_obs[i, :] = y
     i += 1
-
+print(y_obs)
 
 # Plot pareto front (two functions)
 hotels = pd.DataFrame({"price": sample_split[:, 3], "distance_to_beach": sample_split[:, 4]})

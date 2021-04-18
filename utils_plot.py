@@ -6,8 +6,8 @@ def plot_func_list(list, range1, range2, title1, title2, h = None):
         x1 = np.linspace(range1[0], range1[1], 11)
         x2 = np.linspace(range2[0], range2[1], 11)
     else:
-        x1 = np.linspace(range1[0], range1[1], 2**h)
-        x2 = np.linspace(range2[0], range2[1], 2**h)
+        x1 = np.linspace(range1[0], range1[1], h+1)
+        x2 = np.linspace(range2[0], range2[1], h+1)
     px1, px2 = np.meshgrid(x1, x2)
 
     fig = plt.figure(figsize=plt.figaspect(0.4))

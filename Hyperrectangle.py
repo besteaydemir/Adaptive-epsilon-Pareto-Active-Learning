@@ -8,7 +8,7 @@ class Hyperrectangle:
     def __init__(self, lower, upper):
         self.upper = upper
         self.lower = lower
-        self.diameter = np.sum((np.array(upper)-np.array(lower))**2)
+        self.diameter = np.linalg.norm(np.array(upper)-np.array(lower))
 
 
     def get_dimension(self):

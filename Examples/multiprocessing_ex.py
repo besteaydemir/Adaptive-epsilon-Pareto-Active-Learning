@@ -44,19 +44,20 @@ def worker1(epsilon):
     y = problem_model.observe(data, std=0.05)
 
     # Specify kernel and mean function for GP prior
-    kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in
+    kernel_list = [(gpf.kernels.SquaredExponential()) for _ in
                    range(2)]  # lengthscales=[0.5, 0.5]
     # kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
     gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
     # Adaptive Epsilon PAL algorithm
-    alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.1, gp=gp,
+    alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=0.15, gp=gp,
                                     initial_hypercube=Hypercube(2, (0, 0)))
     pareto_set, pareto_set_cells = alg_object.algorithm()
     hmax = alg_object.hmax
     time_elapsed = alg_object.time_elapsed
     tau_eval = alg_object.tau
     t_eval = alg_object.t
+    hmax_len = alg_object.hmax_len
 
     # Print nodes in the Pareto set
     printl(pareto_set)
@@ -76,19 +77,13 @@ def worker1(epsilon):
 
     # Plot Pareto set
 
-    func_val1, func_val2 = plot_func_list(func_list, (-1, 1), (-1, 1), title1, title2)
-
     # Plot pareto front (two functions)
-    hotels = pd.DataFrame({"price": func_val1, "distance_to_beach": func_val2})
-    mask = paretoset(hotels, sense=["max", "max"])
-    plot_pareto_front(func_val1, func_val2, mask)
-
     a = np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 2)
     print(a.shape)
     y = problem_model.observe(a, std=0)
 
     # Error metric
-    p_set = np.hstack((func_val1, func_val2))
+    p_set = np.hstack((func_val1.reshape(-1, 1), func_val2.reshape(-1, 1)))
 
     c = 0
     for row in p_set:
@@ -104,6 +99,38 @@ def worker1(epsilon):
     plot_pareto_front(func_val1, func_val2, mask, y[:, 0], y[:, 1], title=title, plotfront=False)
 
 
+    # 2nd
+    # Get the center of each node in the Pareto set and plot after observing
+    cell_list = []
+    for node in pareto_set:
+        for cell in node.hypercube_list:
+            cell_list.append(cell)
+
+    cells = [hypercube.get_center() for hypercube in cell_list]
+
+    a = np.squeeze(np.array(cells)).reshape(-1, 2)
+    print(a.shape)
+    y = problem_model.observe(a, std=0)
+
+    # Error metric
+    p_set = np.hstack((func_val1.reshape(-1, 1), func_val2.reshape(-1, 1)))
+
+    c1 = 0
+    for row in p_set:
+        a = y - row
+        b = np.linalg.norm(a, axis=1)
+        # print("b")
+        # print(b)
+        c1 += np.min(b)
+
+    title = "$\epsilon = $" + '%.2f' % epsilon + ", Error = " + '%.3f' % (c1 / p_set.shape[0]) + r'$, \tau $ :' + str(
+        tau_eval) + ", Time(s) :" + '%.3f' % time_elapsed
+    plot_pareto_front(func_val1, func_val2, mask, y[:, 0], y[:, 1], title=title, plotfront=True)
+    plot_pareto_front(func_val1, func_val2, mask, y[:, 0], y[:, 1], title=title, plotfront=False)
+
+    return tau_eval, c / p_set.shape[0], (c1 / p_set.shape[0])
+
+
 
 if __name__ == "__main__":
     # printing main program process id
@@ -111,27 +138,15 @@ if __name__ == "__main__":
     np.random.seed(7)
 
     # creating processes
-    p1 = multiprocessing.Process(target=worker1, args=(0.5,))
-    p2 = multiprocessing.Process(target=worker1, args=(0.1,))
-    p3 = multiprocessing.Process(target=worker1, args=(0.05,))
+    pool = multiprocessing.Pool(processes=2)
+    p = pool.map(worker1, [0.3, 0.3, 0.3])
+    np.savetxt("sine_name0_3.txt", np.asarray(p))
 
-    # starting processes
-    p1.start()
-    p2.start()
-    p3.start()
+    pool2 = multiprocessing.Pool(processes=2)
+    p2 = pool2.map(worker1, [0.05, 0.05, 0.05])
+    np.savetxt("sine_name0_05.txt", np.asarray(p2))
 
-    # process IDs
-    print("ID of process p1: {}".format(p1.pid))
-    print("ID of process p2: {}".format(p2.pid))
+    pool3= multiprocessing.Pool(processes=2)
+    p3 = pool3.map(worker1, [0.1, 0.1, 0.1])
+    np.savetxt("sine_name0_1.txt", np.asarray(p3))
 
-    # wait until processes are finished
-    p1.join()
-    p2.join()
-    p3.join()
-
-    # both processes finished
-    print("Both processes finished execution!")
-
-    # check if processes are alive
-    print("Process p1 is alive: {}".format(p1.is_alive()))
-    print("Process p2 is alive: {}".format(p2.is_alive()))

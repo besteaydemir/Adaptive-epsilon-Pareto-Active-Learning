@@ -82,7 +82,7 @@ class AdaptiveEpsilonPAL:
         tau_change = True # Initial
         sigmas = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t:  # While s_t is not empty
+        while self.s_t and self.t < 800:  # While s_t is not empty
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
