@@ -185,9 +185,9 @@ def worker1(epsilon):
 
 if __name__ == "__main__":
 
-    pool3 = multiprocessing.Pool(processes=2)
-    p = pool3.map(worker1, [0.4, 0.4])
-    np.savetxt("name5.txt", np.asarray(p))
+    pool3 = multiprocessing.Pool(processes=5)
+    p = pool3.map(worker1, [0.4, 0.4, 0.4, 0.4, 0.4])
+    np.savetxt("04_lsm_norm.txt", np.asarray(p))
 
     # pool2 = multiprocessing.Pool(processes=2)
     # p2 = pool2.map(worker1, [0.1, 0.1, 0.1])
