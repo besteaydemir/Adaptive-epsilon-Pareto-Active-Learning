@@ -86,10 +86,10 @@ class GaussianProcessModel:
                 print_summary(m)
                 print("Log likelihood after optimization: ", tf.keras.backend.get_value(m.log_marginal_likelihood()))
 
-        self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy() + self.lengthscales_list[1][0].numpy()
-                  + self.lengthscales_list[1][1].numpy() + self.lengthscales_list[0][2].numpy()
-                  + self.lengthscales_list[1][2].numpy()) / 6
-        # self.L = (self.lengthscales_list[0].numpy() + self.lengthscales_list[1].numpy()) / 2
+        # self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy() + self.lengthscales_list[1][0].numpy()
+        #           + self.lengthscales_list[1][1].numpy() + self.lengthscales_list[0][2].numpy()
+        #           + self.lengthscales_list[1][2].numpy()) / 6
+        self.L = (self.lengthscales_list[0].numpy() + self.lengthscales_list[1].numpy()) / 2
         print("LLLL", self.L)
 
         self.v = (self.variance_list[0].numpy() + self.variance_list[1].numpy()) / 2

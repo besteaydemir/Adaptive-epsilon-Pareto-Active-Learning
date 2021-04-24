@@ -26,7 +26,7 @@ def worker1(epsilon):
     data = pd.read_csv("data.txt", sep=';', header=None).to_numpy()
 
     # Standardize the design space and the objectives
-    scaler = preprocessing.StandardScaler()
+    scaler = preprocessing.MinMaxScaler()
     data[:, :3] = scaler.fit_transform(data[:, :3])
     data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:]) * 2 -1
 
@@ -65,13 +65,13 @@ def worker1(epsilon):
     problem_model = OptimizationProblem(dataset=(sample_split[:, :3], sample_split[:, 3:]))
 
     # Specify kernel and mean function for GP prior
-    a = np.array([1, 1, 1])
-    b = 1 + np.random.randn(3,) * 0.1
-    ls = list(a * b )
-    a = np.array([1, 1, 30])
-    b = 1 + np.random.randn(3, ) * 0.1
-    ls2 = list(a * b )
-    kernel_list = [(gpf.kernels.SquaredExponential(ls)), (gpf.kernels.SquaredExponential(ls2))]  # lengthscales=[0.1, 0.1, 0.1]
+    af = np.array([1, 5, 1])
+    bf = 1 + np.random.randn(3,) * 0.1
+    lsf = list(af * bf)
+    ad = np.array([1, 5, 30])
+    bd = 1 + np.random.randn(3, ) * 0.1
+    ls2d = list(ad * bd)
+    kernel_list = [(gpf.kernels.SquaredExponential()), (gpf.kernels.SquaredExponential())]  # lengthscales=[0.1, 0.1, 0.1]
     gp = GaussianProcessModel(X=gp_split[:, :3], Y=gp_split[:, 3:], multi=False, periodic=False, m=2,
                               kernel_list=kernel_list, verbose=True)
 
@@ -185,8 +185,8 @@ def worker1(epsilon):
 
 if __name__ == "__main__":
 
-    pool = multiprocessing.Pool(processes=5)
-    p = pool.map(worker1, [.3, .3, .3, .3, .3])
+    pool3 = multiprocessing.Pool(processes=2)
+    p = pool3.map(worker1, [0.4, 0.4])
     np.savetxt("name5.txt", np.asarray(p))
 
     # pool2 = multiprocessing.Pool(processes=2)
