@@ -66,12 +66,12 @@ def worker1(epsilon):
 
     # Specify kernel and mean function for GP prior
     af = np.array([1, 5, 1])
-    bf = 1 + np.random.randn(3,) * 0.1
+    bf = 1 + np.random.randn(3,) * 0.4
     lsf = list(af * bf)
     ad = np.array([1, 5, 30])
-    bd = 1 + np.random.randn(3, ) * 0.1
+    bd = 1 + np.random.randn(3, ) * 0.4
     ls2d = list(ad * bd)
-    kernel_list = [(gpf.kernels.SquaredExponential()), (gpf.kernels.SquaredExponential())]  # lengthscales=[0.1, 0.1, 0.1]
+    kernel_list = [gpf.kernels.SquaredExponential(lengthscales=lsf), gpf.kernels.SquaredExponential(lengthscales=ls2d)]  # lengthscales=[0.1, 0.1, 0.1]
     gp = GaussianProcessModel(X=gp_split[:, :3], Y=gp_split[:, 3:], multi=False, periodic=False, m=2,
                               kernel_list=kernel_list, verbose=True)
 
