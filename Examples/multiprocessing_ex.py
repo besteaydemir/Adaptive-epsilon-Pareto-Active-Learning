@@ -19,7 +19,7 @@ import pandas as pd
 
 
 def worker1(epsilon):
-    np.random.seed(134340)
+    #np.random.seed(134340)
 
     # Generate the function lists
     func1 = lambda x: (2 * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) + 4 * np.sin(2 * np.pi * x[:, 0]) * np.sin(
@@ -29,24 +29,16 @@ def worker1(epsilon):
     func_list = [func1, func2]
     problem_model = OptimizationProblem(func_list)
 
-    # Visualize the functions (two functions)
-    title1 = "$2sin(\pi x_1)sin(\pi x_2) + 4sin(2 \pi x_1)sin(2 \pi x_2)$"
-    title2 = "$2sin(\pi x_1)sin(\pi x_2) - 6sin(2 \pi x_1)sin(2 \pi x_2)$"
-    func_val1, func_val2 = plot_func_list(func_list, (-1, 1), (-1, 1), title1, title2)
 
-    # Plot pareto front (two functions)
-    hotels = pd.DataFrame({"price": func_val1, "distance_to_beach": func_val2})
-    mask = paretoset(hotels, sense=["max", "max"])
-    plot_pareto_front(func_val1, func_val2, mask)
 
     # Generate synthetic data
     data = np.random.uniform(low=-1, high=1, size=(40, 2))  # Can be generated with opt problem instance for syn. data
     y = problem_model.observe(data, std=0.05)
 
     # Specify kernel and mean function for GP prior
-    kernel_list = [(gpf.kernels.SquaredExponential()) for _ in
+    kernel_list = [(gpf.kernels.SquaredExponential(lengthscales=[0.2, 0.2])) for _ in
                    range(2)]  # lengthscales=[0.5, 0.5]
-    # kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
+    #kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
     gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
     # Adaptive Epsilon PAL algorithm
@@ -58,6 +50,17 @@ def worker1(epsilon):
     tau_eval = alg_object.tau
     t_eval = alg_object.t
     hmax_len = alg_object.hmax_len
+
+    # Visualize the functions (two functions)
+    title1 = "$2sin(\pi x_1)sin(\pi x_2) + 4sin(2 \pi x_1)sin(2 \pi x_2)$"
+    title2 = "$2sin(\pi x_1)sin(\pi x_2) - 6sin(2 \pi x_1)sin(2 \pi x_2)$"
+    func_val1, func_val2 = plot_func_list(func_list, (-1, 1), (-1, 1), title1, title2, h = int(1/hmax_len))
+
+    # Plot pareto front (two functions)
+    hotels = pd.DataFrame({"price": func_val1, "distance_to_beach": func_val2})
+    mask = paretoset(hotels, sense=["max", "max"])
+    plot_pareto_front(func_val1, func_val2, mask)
+
 
     # Print nodes in the Pareto set
     printl(pareto_set)
@@ -135,18 +138,19 @@ def worker1(epsilon):
 if __name__ == "__main__":
     # printing main program process id
     print("ID of main process: {}".format(os.getpid()))
-    np.random.seed(7)
+
+    pool3 = multiprocessing.Pool(processes=3)
+    p3 = pool3.map(worker1, [1, 1, 1])
+    np.savetxt("sine_name0_1.txt", np.asarray(p3))
 
     # creating processes
-    pool = multiprocessing.Pool(processes=2)
-    p = pool.map(worker1, [0.3, 0.3, 0.3])
+    pool = multiprocessing.Pool(processes=3)
+    p = pool.map(worker1, [0.5, 0.5, 0.5])
     np.savetxt("sine_name0_3.txt", np.asarray(p))
 
-    pool2 = multiprocessing.Pool(processes=2)
-    p2 = pool2.map(worker1, [0.05, 0.05, 0.05])
-    np.savetxt("sine_name0_05.txt", np.asarray(p2))
 
-    pool3= multiprocessing.Pool(processes=2)
-    p3 = pool3.map(worker1, [0.1, 0.1, 0.1])
-    np.savetxt("sine_name0_1.txt", np.asarray(p3))
+
+    pool2 = multiprocessing.Pool(processes=3)
+    p2 = pool2.map(worker1, [0.3, 0.3, 0.3])
+    np.savetxt("sine_name0_05.txt", np.asarray(p2))
 

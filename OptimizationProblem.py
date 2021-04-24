@@ -9,7 +9,7 @@ class OptimizationProblem:
         self.m = 2
         if scaler is not None:
             self.scaler =scaler
-        self.cardinality = 186
+        self.cardinality = 166
         self.N = 2
         self.D_1 = 3
         self.alpha = 1

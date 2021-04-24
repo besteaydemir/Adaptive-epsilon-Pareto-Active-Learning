@@ -9,46 +9,44 @@ import time
 
 
 def pess(a):
-    # print("pesssss")
-    # printl(a)
     pess_set = []
     for i in range(len(a)):
-        # print("i", i)
+        # #print("i", i)
         set_include = True
         for j in range(len(a)):
             if j == i:
                 continue
-            # print(len(a))
-            # print("j", j)
-            # print(a[i].R_t.get_lower())
-            # print(a[j].R_t.get_lower())
-            # print(np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()))
+            # #print(len(a))
+            # #print("j", j)
+            # #print(a[i].R_t.get_lower())
+            # #print(a[j].R_t.get_lower())
+            # #print(np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()))
             if np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()):
                 set_include = False
-                # print("here")
+                # #print("here")
                 break
 
-            #print(set_include)
+            ##print(set_include)
 
-        # print("deciding for the node--------------------")
-        # print(set_include)
+        # #print("deciding for the node--------------------")
+        # #print(set_include)
 
         if set_include:
             pess_set.append(a[i])
-    #     printl(pess_set)
-    # printl(a)
-    # print("returning")
+    #     #printl(pess_set)
+    # #printl(a)
+    # #print("returning")
     return pess_set
 
 
 def set_diff(s1, s2):
-    # printl(s1)
-    # printl(s2)
+    # #printl(s1)
+    # #printl(s2)
     tmp = copy.deepcopy(s1)
     for node in s2:
         if node in tmp:
             tmp.remove(node)
-    # printl(tmp)
+    # #printl(tmp)
     return tmp
 
 
@@ -56,8 +54,8 @@ def set_diff(s1, s2):
 class AdaptiveEpsilonPAL:
     def __init__(self, problem_model, epsilon, delta, gp, initial_hypercube):
         self.problem_model = problem_model
-        self.epsilon = epsilon  # Accuracy level given as input to the algorithm
-        self.delta = delta  # ???
+        self.epsilon = epsilon
+        self.delta = delta
         self.gp = gp
 
         # Initialize
@@ -82,7 +80,8 @@ class AdaptiveEpsilonPAL:
         tau_change = True # Initial
         sigmas = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t :  # While s_t is not empty
+        while self.s_t and self.tau < 150 and self.t < 1100:  # While s_t is not empty
+
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
             print("t" , self.t)
@@ -93,62 +92,66 @@ class AdaptiveEpsilonPAL:
             print("p_t length")
             print(len(self.p_t))
             # if self.p_t:
-            #     printl(self.p_t)
+            #     #printl(self.p_t)
             a_t = self.p_t + self.s_t  # Active nodes, union of sets s_t and p_t at the beginning of round t
-            # print("a_t")
-            # printl(a_t)
+            # #print("a_t")
+            # #printl(a_t)
             p_pess = pess(a_t)  # Pessimistic Pareto set of A_t
-            print("p_pess(a_t)")
-            print(len(p_pess))
+
+            # print("p_pess(a_t)")
+            # printl(p_pess)
 
             "Modeling"
-            print("Modeling")
+            #print("Modeling")
             #self.beta.append(self.find_beta(self.t))
-            print("VH max", len(self.V) -1)
+            #print("VH max", len(self.V) -1)
 
             # if len(self.V) < self.hmax + 1:
             #     self.V.append(self.find_V(self.hmax))
-            #print('s_t before modeling')
-            #printl(self.s_t)
+            ##print('s_t before modeling')
+            ##printl(self.s_t)
 
 
-            if True:
-                for node in a_t:
-                    # Obtain mu_tau and sigma_tau of the node
-                    mu_tau, sigma_tau = self.gp.inference(node.get_center())
+            for node in a_t:
+                # Obtain mu_tau and sigma_tau of the node
+                mu_tau, sigma_tau = self.gp.inference(node.get_center())
 
-                    if len(self.V) <= node.h:
-                        self.V.append(self.find_V(node.h))
-                        self.hmax += 1
-                        self.hmax_len = node.hypercube_list[0].length
+                if len(self.V) <= node.h:
+                    self.V.append(self.find_V(node.h))
+                    self.hmax += 1
+                    self.hmax_len = node.hypercube_list[0].length
 
-                    if node.h == 0:
-                        V_h_1 = self.V[node.h]
-                    else:
-                        V_h_1 = self.V[node.h - 1]
+                if node.h == 0:
+                    V_h_1 = self.V[node.h]
+                else:
+                    V_h_1 = self.V[node.h - 1]
 
 
-                    mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
-                    node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
-                                                     #self.beta[self.t],
-                                                     self.find_beta(self.t),
-                                                     self.V[node.h], V_h_1)
+                mu_tau_parent, sigma_tau_parent = self.gp.inference(node.parent_node.get_center())
 
-            #print('s_t')
-            #printl(self.s_t)
-            # print("a_t")
-            # printl(a_t)
 
-            print('s_t length before discard')
-            print(len(self.s_t))
+                node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
+                                                 #self.beta[self.t],
+                                                 self.find_beta(self.t),
+                                                 self.V[node.h], V_h_1)
+
+
+            ##print('s_t')
+            ##printl(self.s_t)
+            # #print("a_t")
+            # #printl(a_t)
+
+            #print('s_t length before discard')
+            #print(len(self.s_t))
+
 
             "Discarding"
-            print("Discarding")
+            #print("Discarding")
             templist = set_diff(self.s_t, p_pess)
-            # printl(self.s_t)
-            # printl(p_pess)
-            # print("set_diff(self.s_t, p_pess)------------------")
-            # printl(templist)
+            # #printl(self.s_t)
+            # #printl(p_pess)
+            # #print("set_diff(self.s_t, p_pess)------------------")
+            # #printl(templist)
             count = 0
             for node in templist:
                 for pess_node in p_pess:
@@ -160,17 +163,18 @@ class AdaptiveEpsilonPAL:
                         self.s_t.remove(node)
                         break
 
-            print('s_t length after discard')
-            print(len(self.s_t))
+            #print('s_t length after discard')
+            #print(len(self.s_t))
 
 
             w_t = self.p_t + self.s_t  # The union of sets St and Pt at the end of the discarding phase of round t
-            print('w_t')
-            print(len(w_t))
-            # printl(w_t)
+            #print('w_t')
+            #print(len(w_t))
+            # #printl(w_t)
+
 
             "Epsilon Covering"
-            print("epsilon Covering")
+            #print("epsilon Covering")
             counter = 0
             for node in self.s_t:
                 belongs = True
@@ -178,32 +182,33 @@ class AdaptiveEpsilonPAL:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        if counter < 5:
-                            print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        # if counter < 5:
+                        #     print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         counter += 1
                         break
                 if belongs:
                     print("belongs")
                     self.s_t.remove(node)
                     self.p_t.append(node)
-            #print("count", count)
+            ##print("count", count)
 
-            print('s_t after e covering')
-            print(len(self.s_t))
+            #print('s_t after e covering')
+            #print(len(self.s_t))
 
 
             "Refining / Evaluating"
-            print("refining evaluating")
+            #print("refining evaluating")
             if self.s_t:  # If s_t is not empty
-                # print("look here")
-                # print(np.array([node.R_t.diameter for node in w_t]))
+                # #print("look here")
+                # #print(np.array([node.R_t.diameter for node in w_t]))
                 unc_node_ind = np.argmax(np.array([node.R_t.diameter for node in w_t]))
                 unc_node = w_t[unc_node_ind]
                 conf_diameter[self.t] = unc_node.R_t.diameter
+
                 print("unc_node")
                 print(unc_node)
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
-                print(sigma_unc)
+                #print(sigma_unc)
 
                 sigmas[self.t] = np.linalg.norm(sigma_unc)
 
@@ -216,10 +221,10 @@ class AdaptiveEpsilonPAL:
 
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
-                    # print(unc_node)
-                    # print("reproduce")
+                    # #print(unc_node)
+                    # #print("reproduce")
                     repro = unc_node.reproduce()
-                    # printl(repro)
+                    # #printl(repro)
                     self.s_t = self.s_t + repro
                     tau_change = False
                 elif condition and unc_node in self.p_t:
@@ -227,26 +232,28 @@ class AdaptiveEpsilonPAL:
                     self.p_t = self.p_t + unc_node.reproduce()
                     tau_change = False
                 else:
-                    y = self.problem_model.observe(unc_node.get_center(), std= 0.5)
+                    y = self.problem_model.observe(unc_node.get_center())
                     # Update GP parameters
                     self.gp.update(unc_node.get_center(), y)
                     self.t_tau.append(self.t)
                     self.tau += 1
                     tau_change = True
 
+
+
             self.t += 1
         plt.figure()
         ax = plt.axes()
         ax.plot(range(1,self.t-1), sigmas[1:self.t-1], label = r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
-        print("herere")
-        print(self.t_tau)
+        #print("herere")
+        #print(self.t_tau)
         ax.scatter(self.t_tau, sigmas[self.t_tau], color = 'red', label=r"$\tau$")
         ax.set_xlabel('$t$')
         ax.set_ylabel(r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
         ax.legend()
         plt.title(r"Posterior Variance after $\tau$ Evaluations")
 
-        #print(conf_diameter[:self.t])
+        ##print(conf_diameter[:self.t])
 
         plt.figure()
         ax = plt.axes()
@@ -261,13 +268,13 @@ class AdaptiveEpsilonPAL:
 
         t2 = time.time()
         self.time_elapsed = t2-t1
-        print("time")
-        print(t2 - t1)
+        #print("time")
+        #print(t2 - t1)
         pareto_cells = [node.hypercube_list for node in self.p_t]
 
         #node.hypercube_list[i]
         #for i in range(len(node.hypercube_list))
-        #printl(self.p_t)
+        ##printl(self.p_t)
 
         return self.p_t, pareto_cells
 
@@ -287,11 +294,11 @@ class AdaptiveEpsilonPAL:
         return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**10 * (tau+1)**2 / (3*self.delta))
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**8 * (tau+1)**2 / (3*self.delta))
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.5
+        rho = 0.4
         alpha = 1
 
         m = self.problem_model.m
@@ -301,7 +308,7 @@ class AdaptiveEpsilonPAL:
 
         # Constants associated with metric dimension D1
         C_1 = np.sqrt(2 * self.gp.v) / self.gp.L
-        print("c1", C_1)
+        #print("c1", C_1)
         C_k = C_1
         C_2 = 2 * np.log(2 * C_1 ** 2 * np.pi ** 2 / 6)
         C_3 = 0.91501 + 2.6945 * np.sqrt(2 * D_1 * alpha * np.log(2))  # eta_1 and eta_2 in the paper.
@@ -315,7 +322,7 @@ class AdaptiveEpsilonPAL:
         term1 = np.sqrt(C_2 + 2 * log_term + h * np.log(N) +
                         np.maximum(0, -4 * (D_1 / alpha) * np.log(C_k * (v_1 * rho ** h) ** alpha))) + C_3
         term2 = 4 * C_k * (v_1 * rho ** h) ** alpha
-        #print("vh for h", h, term1 * term2)
+        ##print("vh for h", h, term1 * term2)
         return term2 * term1
 
 

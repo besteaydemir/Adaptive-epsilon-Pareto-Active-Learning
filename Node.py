@@ -53,9 +53,11 @@ class Node:
         return self.hypercube_list == other.hypercube_list
 
     def __str__(self):
-        name = "Node: \nDepth: " + str(self.h) + " \nHyperrectangle: " + self.R_t.__str__() + '\nHypercubes: '
+        name = "Node: \nDepth: " + str(self.h) + " \nHyperrectangle: " + self.R_t.__str__() + '\nHypercubes: \n'
+        #name = "Node: \nDepth: " + str(self.h) + '\nHypercubes: \n'
         for cube in self.hypercube_list:
             name += cube.__str__() + '\n'
+        name = name + "Node center: " + str(self.get_center()) + '\n'
         return name
 
     # def __hash__(self):
