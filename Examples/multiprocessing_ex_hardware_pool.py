@@ -187,7 +187,7 @@ def worker1(epsilonseed):
 if __name__ == "__main__":
 
     pool3 = multiprocessing.Pool(processes=2)
-    p3 = pool3.map(worker1, [(0.4, 10), (0.4,20)])
+    p3 = pool3.map(worker1, [(0.4, 1), (0.4,2)])
     np.savetxt("04_lsm_norm.txt", np.asarray(p3))
 
     pool = multiprocessing.Pool(processes=2)
