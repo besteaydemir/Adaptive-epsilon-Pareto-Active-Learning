@@ -18,9 +18,10 @@ from paretoset import paretoset
 import pandas as pd
 
 
-def worker1(epsilon):
+def worker1(epsilonseed):
     # Set seed for reproducibility
-
+    epsilon, seed = epsilonseed
+    np.random.seed(seed)
 
     # Load the dataset into a data frame
     data = pd.read_csv("data.txt", sep=';', header=None).to_numpy()
@@ -58,14 +59,14 @@ def worker1(epsilon):
     gp_split = data[:40]
     sample_split = data[40:]
 
-    np.random.seed(10)
+
     #t = 1000 * time.time()  # current time in milliseconds
     #np.random.seed(int(t) % 2 ** 32)
 
     problem_model = OptimizationProblem(dataset=(sample_split[:, :3], sample_split[:, 3:]))
 
     # Specify kernel and mean function for GP prior
-    af = np.array([1, 5, 1])
+    af = np.array([1, 5, 5])
     bf = 1 + np.random.randn(3,) * 0.4
     lsf = list(af * bf)
     ad = np.array([1, 5, 30])
@@ -80,8 +81,8 @@ def worker1(epsilon):
     delta = 0.10
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=delta, gp=gp,
                                     initial_hypercube=Hypercube(1, (0.5, 0.5, 0.5)))
-
-    pareto_set, pareto_set_cells = alg_object.algorithm()
+    titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed)
+    pareto_set, pareto_set_cells = alg_object.algorithm(titles = titles)
 
     hmax = alg_object.hmax
     time_elapsed = alg_object.time_elapsed
@@ -114,24 +115,22 @@ def worker1(epsilon):
     print(p_set)
     c = 0
     for row in p_set:
-        # row =
-        print(row)
         a = y_obs - row
-        print(a)
         b = np.linalg.norm(a, axis=1)
-        print(b)
         c += np.min(b)
-        print(c)
-        print("ended")
-    print(p_set.shape[0])
 
     title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta + ", Error = " + '%.3f' % (c / p_set.shape[0]) + r'$, \tau $ :' + str(
         tau_eval)
+    figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c / p_set.shape[0]) + 'tau' + str(
+        tau_eval) + "seed" + str(seed)
 
     plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-                      plotfront=True)
-    plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-                      plotfront=False)
+                      plotfront=True, figtitle = figtitle)
+    # plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+    #                   plotfront=False)
+
+
+
 
 
     # 2nd
@@ -175,19 +174,25 @@ def worker1(epsilon):
 
     title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta +  ", Error = " + '%.3f' % (c2 / p_set2.shape[0]) + r'$, \tau $ :' + str(
         tau_eval)
+    figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+        tau_eval) + "seed" + str(seed) + "cell"
 
     plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-                      plotfront=True)
-    plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-                      plotfront=False)
-    return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed
+                      plotfront=True, figtitle=figtitle)
+    # plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+    #                   plotfront=False)
+    return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed
 
 
 if __name__ == "__main__":
 
-    pool3 = multiprocessing.Pool(processes=5)
-    p = pool3.map(worker1, [0.4, 0.4, 0.4, 0.4, 0.4])
-    np.savetxt("04_lsm_norm.txt", np.asarray(p))
+    pool3 = multiprocessing.Pool(processes=3)
+    p3 = pool3.map(worker1, [(1000,10), (1000,20)])
+    np.savetxt("04_lsm_norm.txt", np.asarray(p3))
+
+    pool = multiprocessing.Pool(processes=2)
+    p = pool.map(worker1, [(0.4, 40), (0.4, 50)])
+    np.savetxt("04_lsm_norm2.txt", np.asarray(p))
 
     # pool2 = multiprocessing.Pool(processes=2)
     # p2 = pool2.map(worker1, [0.1, 0.1, 0.1])

@@ -74,13 +74,13 @@ class AdaptiveEpsilonPAL:
         self.time_elapsed = 0
 
 
-    def algorithm(self):
+    def algorithm(self, titles = None):
         #np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
         sigmas = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t and self.tau < 150 and self.t < 1100:  # While s_t is not empty
+        while self.s_t and self.tau < 60 and self.t < 1200:  # While s_t is not empty
 
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
@@ -252,6 +252,7 @@ class AdaptiveEpsilonPAL:
         ax.set_ylabel(r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
         ax.legend()
         plt.title(r"Posterior Variance after $\tau$ Evaluations")
+        plt.savefig(titles+ ".png")
 
         ##print(conf_diameter[:self.t])
 
@@ -264,6 +265,7 @@ class AdaptiveEpsilonPAL:
         plt.axhline(self.epsilon, color='red', label='$\epsilon$')
         ax.legend()
         plt.title("Diameter of the Cumulative Confidence \n Hyper-rectangle of the Most Uncertain Node")
+        plt.savefig(titles + "dia" + ".png")
 
 
         t2 = time.time()

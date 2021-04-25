@@ -28,7 +28,7 @@ def plot_func_list(list, range1, range2, title1, title2, h = None):
 
     return func_val1, func_val2
 
-def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=None, plotfront = False):
+def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None):
     fig = plt.figure(figsize=(8, 5))
     #plt.rcParams["figure.dpi"] = 400
     ax = plt.axes()
@@ -70,5 +70,9 @@ def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=No
 
     if title is not None:
         plt.title(title)
-    plt.show()
+
+    if figtitle is not None:
+        plt.savefig(figtitle+'.png')
+
+    #plt.show()
 
