@@ -149,7 +149,6 @@ if __name__ == "__main__":
     np.savetxt("sine_name0_3.txt", np.asarray(p))
 
 
-
     pool2 = multiprocessing.Pool(processes=3)
     p2 = pool2.map(worker1, [0.3, 0.3, 0.3])
     np.savetxt("sine_name0_05.txt", np.asarray(p2))

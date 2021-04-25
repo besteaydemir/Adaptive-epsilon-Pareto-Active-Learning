@@ -29,7 +29,7 @@ def worker1(epsilonseed):
     # Standardize the design space and the objectives
     scaler = preprocessing.MinMaxScaler()
     data[:, :3] = scaler.fit_transform(data[:, :3])
-    data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:]) * 2 -1
+    data[:, 3:] = preprocessing.MinMaxScaler().fit_transform(data[:, 3:]) * 2 - 1
 
     # plt.scatter(data[:,2], data[:,4])
     # plt.show()
@@ -72,7 +72,7 @@ def worker1(epsilonseed):
     ad = np.array([1, 5, 30])
     bd = 1 + np.random.randn(3, ) * 0.4
     ls2d = list(ad * bd)
-    kernel_list = [gpf.kernels.SquaredExponential(lengthscales=lsf), gpf.kernels.SquaredExponential(lengthscales=ls2d)]  # lengthscales=[0.1, 0.1, 0.1]
+    kernel_list = [gpf.kernels.SquaredExponential(), gpf.kernels.SquaredExponential()]  # lengthscales=[0.1, 0.1, 0.1]
     gp = GaussianProcessModel(X=gp_split[:, :3], Y=gp_split[:, 3:], multi=False, periodic=False, m=2,
                               kernel_list=kernel_list, verbose=True)
 
@@ -186,21 +186,29 @@ def worker1(epsilonseed):
 
 if __name__ == "__main__":
 
-    pool3 = multiprocessing.Pool(processes=3)
-    p3 = pool3.map(worker1, [(0.4,10), (0.4,20), (0.4,30)])
+    pool3 = multiprocessing.Pool(processes=2)
+    p3 = pool3.map(worker1, [(0.4, 10), (0.4,20)])
     np.savetxt("04_lsm_norm.txt", np.asarray(p3))
 
     pool = multiprocessing.Pool(processes=2)
-    p = pool.map(worker1, [(0.4, 50), (0.4, 60)])
+    p = pool.map(worker1, [(0.4, 5), (0.4, 6)])
     np.savetxt("04_lsm_norm2.txt", np.asarray(p))
 
-    pool4 = multiprocessing.Pool(processes=3)
-    p4 = pool4.map(worker1, [(0.04, 10), (0.04, 20), (0.04, 30)])
-    np.savetxt("004_lsm_norm.txt", np.asarray(p3))
+    pool4 = multiprocessing.Pool(processes=2)
+    p4 = pool4.map(worker1, [(0.04, 1), (0.04, 2)])
+    np.savetxt("004_lsm_norm.txt", np.asarray(p4))
 
     pool5 = multiprocessing.Pool(processes=2)
-    p5 = pool5.map(worker1, [(0.04, 50), (0.04, 60)])
-    np.savetxt("004_lsm_norm2.txt", np.asarray(p))
+    p5 = pool5.map(worker1, [(0.04, 5), (0.04, 6)])
+    np.savetxt("004_lsm_norm2.txt", np.asarray(p5))
+
+    pool6 = multiprocessing.Pool(processes=2)
+    p6 = pool6.map(worker1, [(0.2, 1), (0.2, 2)])
+    np.savetxt("02_lsm_norm.txt", np.asarray(p6))
+
+    pool7 = multiprocessing.Pool(processes=2)
+    p7 = pool7.map(worker1, [(0.2, 5), (0.2, 6)])
+    np.savetxt("02_lsm_norm2.txt", np.asarray(7))
 
 
 
