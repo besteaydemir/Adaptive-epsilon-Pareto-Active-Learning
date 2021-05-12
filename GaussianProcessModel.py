@@ -40,21 +40,22 @@ class GaussianProcessModel:
         opt = gpflow.optimizers.Scipy()
 
         for i in range(self.m):
-            #print(self.Y[:,i].shape)  # Yshape problems
+            print(self.X)
+            print(self.Y[:,i])
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=0.1)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:,i].reshape(-1,1)), kernel=kernel, noise_variance=1e-5)
             print(m.log_marginal_likelihood())
 
-            if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
-            #if True:
+            #if len(self.variance_list) < 2 or len(self.lengthscales_list) < 2:
+            if True:
 
                 # Tune the model parameters according to data
-                opt.minimize(
-                    m.training_loss,
-                    variables=m.trainable_variables,
-                    method="l-bfgs-b",
-                    options={"disp": False, "maxiter": 100}
-                )
+                # opt.minimize(
+                #     m.training_loss,
+                #     variables=m.trainable_variables,
+                #     method="l-bfgs-b",
+                #     options={"disp": False, "maxiter": 100}
+                # )
                 # self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
                 # self.variance_list.append(m.kernel.base_kernel.variance)
                 # self.kernelperiod_list.append(m.kernel.period)
@@ -86,9 +87,10 @@ class GaussianProcessModel:
                 print_summary(m)
                 print("Log likelihood after optimization: ", tf.keras.backend.get_value(m.log_marginal_likelihood()))
 
-        # self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy() + self.lengthscales_list[1][0].numpy()
-        #            + self.lengthscales_list[1][1].numpy() + self.lengthscales_list[0][2].numpy()
-        #            + self.lengthscales_list[1][2].numpy()) / 6
+        #self.L = (self.lengthscales_list[0][1].numpy() + self.lengthscales_list[0][0].numpy() ) / 2
+                  # + self.lengthscales_list[1][0].numpy()
+                  #    + self.lengthscales_list[1][1].numpy() ) / 4
+                        #+ self.lengthscales_list[0][2].numpy() + self.lengthscales_list[1][2].numpy()) / 6
         self.L = (self.lengthscales_list[0].numpy() + self.lengthscales_list[1].numpy()) / 2
         print("LLLL", self.L)
 

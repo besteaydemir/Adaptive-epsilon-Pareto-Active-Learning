@@ -79,8 +79,10 @@ class AdaptiveEpsilonPAL:
         t1 = time.time()
         tau_change = True # Initial
         sigmas = np.ones((1500,))
+        sigmabeta = np.ones((1500,))
+        Vt = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t and self.tau < 80 and self.t < 1200:  # While s_t is not empty
+        while self.s_t and self.tau < 100 and self.t < 2000:  # While s_t is not empty
 
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
@@ -182,8 +184,8 @@ class AdaptiveEpsilonPAL:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        # if counter < 5:
-                        #     print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
+                        if counter < 5:
+                            print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
                         counter += 1
                         break
                 if belongs:
@@ -212,6 +214,10 @@ class AdaptiveEpsilonPAL:
 
                 sigmas[self.t] = np.linalg.norm(sigma_unc)
 
+                sigmabeta[self.t] = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc)
+                print(self.V[unc_node.h])
+                Vt[self.t] = self.V[unc_node.h] * np.sqrt(self.problem_model.m)
+
                 condition = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
                 print("condition")
                 print("beta", np.sqrt(self.find_beta(self.t)))
@@ -232,8 +238,9 @@ class AdaptiveEpsilonPAL:
                     self.p_t = self.p_t + unc_node.reproduce()
                     tau_change = False
                 else:
-                    y = self.problem_model.observe(unc_node.get_center())
+                    y = self.problem_model.observe(unc_node.get_center(), std=0.01)
                     # Update GP parameters
+                    print(unc_node.get_center(), y)
                     self.gp.update(unc_node.get_center(), y)
                     self.t_tau.append(self.t)
                     self.tau += 1
@@ -242,6 +249,9 @@ class AdaptiveEpsilonPAL:
 
 
             self.t += 1
+
+        print("here")
+
         plt.figure()
         ax = plt.axes()
         ax.plot(range(1,self.t-1), sigmas[1:self.t-1], label = r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
@@ -253,6 +263,20 @@ class AdaptiveEpsilonPAL:
         ax.legend()
         plt.title(r"Posterior Variance after $\tau$ Evaluations")
         plt.savefig(titles+ ".png")
+        plt.show()
+
+        plt.figure()
+        ax = plt.axes()
+        ax.plot(range(1, self.t - 1), sigmabeta[1:self.t - 1], label=r'$ \beta_{\tau}^{1/2} ||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+        ax.plot(range(1, self.t - 1), Vt[1:self.t - 1], label=r'$||V_ht||_2$')
+        ax.scatter(self.t_tau, sigmabeta[self.t_tau], color='red', label=r"$\tau$")
+        ax.scatter(self.t_tau, Vt[self.t_tau], color='red', label=r"$\tau$")
+        ax.set_xlabel('$t$')
+        ax.set_yscale('log')
+        ax.legend()
+        plt.title(r"Refine/Evaluate Condition after $\tau$ Evaluations")
+        plt.savefig(titles + "other" +  ".png")
+        plt.show()
 
         ##print(conf_diameter[:self.t])
 
@@ -266,6 +290,7 @@ class AdaptiveEpsilonPAL:
         ax.legend()
         plt.title("Diameter of the Cumulative Confidence \n Hyper-rectangle of the Most Uncertain Node")
         plt.savefig(titles + "dia" + ".png")
+        plt.show()
 
 
         t2 = time.time()
@@ -296,7 +321,7 @@ class AdaptiveEpsilonPAL:
         return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta))
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**8 * (tau+1)**2 / (3*self.delta))
+        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**9 * (tau+1)**2 / (3*self.delta))
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
@@ -324,7 +349,7 @@ class AdaptiveEpsilonPAL:
         term1 = np.sqrt(C_2 + 2 * log_term + h * np.log(N) +
                         np.maximum(0, -4 * (D_1 / alpha) * np.log(C_k * (v_1 * rho ** h) ** alpha))) + C_3
         term2 = 4 * C_k * (v_1 * rho ** h) ** alpha
-        ##print("vh for h", h, term1 * term2)
+
         return term2 * term1
 
 

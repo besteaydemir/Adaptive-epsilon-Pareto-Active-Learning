@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_func_list(list, range1, range2, title1, title2, h = None):
+def plot_func_list(list, range1, range2, title1, title2, no_points=None, h = None):
     if h is None:
-        x1 = np.linspace(range1[0], range1[1], 11)
-        x2 = np.linspace(range2[0], range2[1], 11)
+        x1 = np.linspace(range1[0], range1[1], no_points)
+        x2 = np.linspace(range2[0], range2[1], no_points)
     else:
         x1 = np.linspace(range1[0], range1[1], h+1)
         x2 = np.linspace(range2[0], range2[1], h+1)
@@ -28,24 +28,26 @@ def plot_func_list(list, range1, range2, title1, title2, h = None):
 
     return func_val1, func_val2
 
-def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None):
+def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None):
     fig = plt.figure(figsize=(8, 5))
-    #plt.rcParams["figure.dpi"] = 400
+    # plt.rcParams["figure.dpi"] = 400
     ax = plt.axes()
-    ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=6, color='gray')
-    ax.scatter(func_val1[mask], func_val2[mask], s=8, color='g')
+    if func_val1 is not None:
 
-    func_val1sorted = np.sort(func_val1[mask])
-    func_val2sorted = np.sort(func_val2[mask])[::-1]
+        ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=6, color='gray')
+        ax.scatter(func_val1[mask], func_val2[mask], s=8, color='g')
 
-    for i in range (func_val1[mask].shape[0] - 1):
-        x_values = [func_val1sorted [i], func_val1sorted[i]]
-        y_values = [func_val2sorted[i], func_val2sorted[i+1]]
-        plt.plot(x_values, y_values, color='darkseagreen')
+        func_val1sorted = np.sort(func_val1[mask])
+        func_val2sorted = np.sort(func_val2[mask])[::-1]
 
-        x_values = [func_val1sorted[i], func_val1sorted[i+1]]
-        y_values = [func_val2sorted[i+1], func_val2sorted[i + 1]]
-        plt.plot(x_values, y_values, color='darkseagreen')
+        for i in range (func_val1[mask].shape[0] - 1):
+            x_values = [func_val1sorted [i], func_val1sorted[i]]
+            y_values = [func_val2sorted[i], func_val2sorted[i+1]]
+            plt.plot(x_values, y_values, color='darkseagreen')
+
+            x_values = [func_val1sorted[i], func_val1sorted[i+1]]
+            y_values = [func_val2sorted[i+1], func_val2sorted[i + 1]]
+            plt.plot(x_values, y_values, color='darkseagreen')
 
 
 
@@ -74,5 +76,5 @@ def plot_pareto_front(func_val1, func_val2, mask, y1 = None, y2 = None, title=No
     if figtitle is not None:
         plt.savefig(figtitle+'.png')
 
-    #plt.show()
+    plt.show()
 

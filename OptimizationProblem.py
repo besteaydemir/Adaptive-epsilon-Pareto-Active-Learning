@@ -9,9 +9,9 @@ class OptimizationProblem:
         self.m = 2
         if scaler is not None:
             self.scaler =scaler
-        self.cardinality = 166
+        self.cardinality = 2500
         self.N = 2
-        self.D_1 = 3
+        self.D_1 = 2
         self.alpha = 1
 
         if dataset is not None:
@@ -20,7 +20,9 @@ class OptimizationProblem:
 
     def observe(self, x, std=0):
         if self.func_list is not None:
-            obs = np.array([func(x) + std * np.random.randn(x.shape[0], ) for func in self.func_list]).T
+            print("xxxxxxxxxxxxxxxxxx", x.shape)
+            print(self.func_list[0](x).shape)
+            obs = np.array([func(x).reshape(-1, ) + std * np.random.randn(x.shape[0], ) for func in self.func_list]).T
         else:
             #xinv = self.scaler.inverse_transform(x)
             xinv = x
