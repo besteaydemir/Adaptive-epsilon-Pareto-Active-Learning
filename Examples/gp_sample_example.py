@@ -37,7 +37,7 @@ def worker1(epsilonseed):
 
     # Generate the optimization problem, used for sampling
     func_list = [func1, func2]
-    problem_model = OptimizationProblem(func_list)
+    problem_model = OptimizationProblem(cardinality=2500, N=2, D_1=2, func_list=func_list)
 
 
     # Visualize the functions (two functions)

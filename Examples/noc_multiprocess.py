@@ -64,7 +64,7 @@ def worker1(epsilonseed):
     #t = 1000 * time.time()  # current time in milliseconds
     #np.random.seed(int(t) % 2 ** 32)
 
-    problem_model = OptimizationProblem(dataset=(sample_split[:, :4], sample_split[:, 4:]))
+    problem_model = OptimizationProblem(cardinality=268-40, N=2, D_1=4, dataset=(sample_split[:, :4], sample_split[:, 4:]))
 
     # Specify kernel and mean function for GP prior
     a = np.array([0.1, 0.1, 11,0.1])

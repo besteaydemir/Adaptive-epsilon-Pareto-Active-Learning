@@ -28,6 +28,37 @@ def plot_func_list(list, range1, range2, title1, title2, no_points=None, h = Non
 
     return func_val1, func_val2
 
+
+def plot_func_list_1d(list, range1, title1, title2, no_points=None, h = None):
+
+    px1 = np.linspace(range1[0], range1[1], no_points).reshape(no_points, 1)
+
+
+    fig = plt.figure(figsize=plt.figaspect(0.4))
+    ax1 = fig.add_subplot(1, 2, 1)
+    func_val1 = list[0](px1)
+    ax1.scatter(px1, func_val1, cmap='viridis')
+    ax1.set_xlabel('$X_1$')
+    ax1.set_ylabel('')
+    ax1.set_title(title1)
+
+    ax2 = fig.add_subplot(1, 2, 2)
+    func_val2 = list[1](np.vstack(px1))
+    ax2.scatter(px1, func_val2, cmap='viridis')
+    ax2.set_xlabel('$X_1$')
+    ax2.set_ylabel('')
+    ax2.set_title(title2)
+    plt.show()
+
+    return func_val1, func_val2
+
+
+
+
+
+
+
+
 def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None):
     fig = plt.figure(figsize=(8, 5))
     # plt.rcParams["figure.dpi"] = 400

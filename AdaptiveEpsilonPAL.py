@@ -74,7 +74,7 @@ class AdaptiveEpsilonPAL:
         self.time_elapsed = 0
 
 
-    def algorithm(self, titles = None):
+    def algorithm(self, titles = None, vis=False):
         #np.random.seed(7)
         t1 = time.time()
         tau_change = True # Initial
@@ -246,11 +246,14 @@ class AdaptiveEpsilonPAL:
                     self.tau += 1
                     tau_change = True
 
+                    if vis is True:
+                        self.problem_model.plot_gp_1d(rang=(0,1), gp=self.gp, x=unc_node.get_center(), y=y)
+
 
 
             self.t += 1
 
-        print("here")
+
 
         plt.figure()
         ax = plt.axes()

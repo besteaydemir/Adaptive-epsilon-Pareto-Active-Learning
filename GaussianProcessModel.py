@@ -50,12 +50,12 @@ class GaussianProcessModel:
             if True:
 
                 # Tune the model parameters according to data
-                # opt.minimize(
-                #     m.training_loss,
-                #     variables=m.trainable_variables,
-                #     method="l-bfgs-b",
-                #     options={"disp": False, "maxiter": 100}
-                # )
+                opt.minimize(
+                    m.training_loss,
+                    variables=m.trainable_variables,
+                    method="l-bfgs-b",
+                    options={"disp": False, "maxiter": 100}
+                )
                 # self.lengthscales_list.append(m.kernel.base_kernel.lengthscales)
                 # self.variance_list.append(m.kernel.base_kernel.variance)
                 # self.kernelperiod_list.append(m.kernel.period)
@@ -101,6 +101,7 @@ class GaussianProcessModel:
     # def gp_multioutput(self, mean_list=None, kernel_list=None):
     #     return gp
 
+
     def inference(self, x):
         mus = np.empty((self.m,1))
         #sigmas = np.empty((self.m, 1))
@@ -111,9 +112,11 @@ class GaussianProcessModel:
             #todo
         else:
             for i, gp in enumerate(self.model):
+
                 mus[i], var[i] = gp.predict_f(x)
 
         return mus, np.sqrt(var)
+
 
     def update(self, x, y):
         self.X = np.vstack((self.X, x))
