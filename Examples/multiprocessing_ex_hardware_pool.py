@@ -43,6 +43,13 @@ def worker1(epsilonseed):
     gp_split = data[:40]
     sample_split = data[40:]
 
+    # Plot pareto front (two functions)
+    objs = pd.DataFrame({"obj1": sample_split[:, 3], "obj2": sample_split[:, 4]})
+    mask = paretoset(objs, sense=["max", "max"])
+
+    plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask,
+                      plotfront=True, figtitle="initpareto_snw")
+
 
     # Find kernel parameters by using gp_split data
     kernel_list = [gpf.kernels.SquaredExponential(), gpf.kernels.SquaredExponential()]
@@ -181,15 +188,33 @@ def worker1(epsilonseed):
                           plotfront=True, figtitle=figtitle)
 
 
-        #Plot masked
+
+
+        # Plot close up
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim"
+
+        plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, lim=[0.3, 1.2])
+
+        # Plot masked
         objs = pd.DataFrame({"obj1": y_obs[:, 0], "obj2": y_obs[:, 1]})
         mask_pareto = paretoset(objs, sense=["max", "max"])
 
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "paretoed"
+            tau_eval) + "seed" + str(seed) + "cell" + "_pareto"
 
-        plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask,  y_obs[:, 0], y_obs[:, 1], title=title,
+        plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto)
+
+        # Plot close up and paretoed
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto"
+
+        plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto, lim=[0.3, 1.2])
+
+
 
         return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax
     else:
