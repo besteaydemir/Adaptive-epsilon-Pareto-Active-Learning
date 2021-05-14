@@ -196,8 +196,8 @@ if __name__ == "__main__":
     # worker1((0.05, 7))
 
 
-    pool3 = multiprocessing.Pool(processes=3)
-    p3 = pool3.map(worker1, [(0.1, 7, 0.33), (0.1, 7, 0.40), (0.1, 7, 0.27)])
+    pool3 = multiprocessing.Pool(processes=4)
+    p3 = pool3.map(worker1, [(0.1, 7, 0.33), (0.1, 7, 0.40), (0.1, 7, 0.27), (0.1, 7, 0.20)])
     np.savetxt("final_gp2_noisy_1.txt", np.asarray(p3))
     #
     # pool = multiprocessing.Pool(processes=2)
