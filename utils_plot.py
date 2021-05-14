@@ -59,13 +59,13 @@ def plot_func_list_1d(list, range1, title1, title2, no_points=None, h = None):
 
 
 
-def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None):
-    fig = plt.figure(figsize=(8, 5))
+def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None, mask_pareto = None, lim=None ):
+    fig = plt.figure()
     # plt.rcParams["figure.dpi"] = 400
     ax = plt.axes()
     if func_val1 is not None:
 
-        ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=6, color='gray')
+        ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=8, color='gray')
         ax.scatter(func_val1[mask], func_val2[mask], s=8, color='g')
 
         func_val1sorted = np.sort(func_val1[mask])
@@ -83,9 +83,14 @@ def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None
 
 
     if (y1 is not None):
+
+        if(mask_pareto is not None):
+            y1 = y1[mask_pareto]
+            y2 = y2[mask_pareto]
+
         func_val1sorted = np.sort(y1)
         func_val2sorted = np.sort(y2)[::-1]
-        ax.scatter(y1, y2, s=8, color='red')
+        ax.scatter(y1, y2, s=7, color='red')
         if plotfront:
             for i in range(y1.shape[0] - 1):
                 x_values = [func_val1sorted[i], func_val1sorted[i]]
@@ -104,8 +109,11 @@ def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None
     if title is not None:
         plt.title(title)
 
+    if lim is not None:
+        ax.set_ylim(lim)
+
     if figtitle is not None:
-        plt.savefig(figtitle+'.png')
+        plt.savefig(figtitle+'.png', bbox_inches='tight')
 
     plt.show()
 

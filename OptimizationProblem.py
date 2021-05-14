@@ -24,25 +24,15 @@ class OptimizationProblem:
 
     def observe(self, x, std=0):
         if self.func_list is not None:
-            print("xxxxxxxxxxxxxxxxxx", x.shape)
-            print(self.func_list[0](x).shape)
             obs = np.array([func(x).reshape(-1, ) + std * np.random.randn(x.shape[0], ) for func in self.func_list]).T
         else:
-            #xinv = self.scaler.inverse_transform(x)
             xinv = x
             # Find the closest one
             a = (self.x - xinv)
-            #print(x)
-            #print(self.x)
-            #print(a)
 
             b = np.linalg.norm(a, axis=1)
-            #print("b")
-            #print(b)
             c = np.argmin(b)
-            #print(c)
-            obs = self.y[c] # T?
-            #print(obs)
+            obs = self.y[c]
 
         return obs
 

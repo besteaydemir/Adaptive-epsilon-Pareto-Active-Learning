@@ -35,7 +35,7 @@ class GaussianProcessModel:
         for i in range(self.m):
 
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:, i].reshape(-1, 1)), kernel=kernel, noise_variance=0.01)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:, i].reshape(-1, 1)), kernel=kernel, noise_variance=0.001)
 
             self.lengthscales_list.append(m.kernel.lengthscales)
             self.variance_list.append(m.kernel.variance)

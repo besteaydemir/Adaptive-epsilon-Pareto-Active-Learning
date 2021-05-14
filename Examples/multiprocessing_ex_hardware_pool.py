@@ -180,24 +180,39 @@ def worker1(epsilonseed):
         plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle)
 
+
+        #Plot masked
+        objs = pd.DataFrame({"obj1": y_obs[:, 0], "obj2": y_obs[:, 1]})
+        mask_pareto = paretoset(objs, sense=["max", "max"])
+
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "paretoed"
+
+        plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask,  y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto)
+
         return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax
     else:
         return -1, -1, -1, -1, -1, -1, -1
 
 
 if __name__ == "__main__":
-    worker1((0.4, 7))
-    worker1((0.2, 7))
-    worker1((0.1, 7))
-    worker1((0.04, 7))
+    worker1((5, 7))
+    # worker1((0.2, 7))
+    # worker1((0.1, 7))
+    # worker1((0.04, 7))
 
-    pool3 = multiprocessing.Pool(processes=1)
-    p3 = pool3.map(worker1, [(0.4, 7), (0.2, 7)])
-    np.savetxt("finalrun_snw.txt", np.asarray(p3))
-
-    pool = multiprocessing.Pool(processes=1)
-    p = pool.map(worker1, [(0.1, 7), (0.04, 7)])
-    np.savetxt("finalrun2_snw.txt", np.asarray(p))
+    # pool3 = multiprocessing.Pool(processes=2)
+    # p3 = pool3.map(worker1, [(0.8, 13), (0.4, 13), (0.2, 13)])
+    # np.savetxt("finalrun_snw.txt", np.asarray(p3))
+    #
+    # pool = multiprocessing.Pool(processes=2)
+    # p = pool.map(worker1, [(0.1, 13), (0.5, 13)])
+    # np.savetxt("finalrun2_snw.txt", np.asarray(p))
+    #
+    # pool = multiprocessing.Pool(processes=1)
+    # p = pool.map(worker1, [(0.05, 13)])
+    # np.savetxt("finalrun3_snw.txt", np.asarray(p))
     #
     # pool4 = multiprocessing.Pool(processes=2)
     # p4 = pool4.map(worker1, [(0.1, 1), (0.1, 2)])
