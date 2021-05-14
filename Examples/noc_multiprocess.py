@@ -29,7 +29,7 @@ def worker1(epsilonseed):
 
     # Standardize the design space and the objectives
     data[:, :4] = preprocessing.MinMaxScaler().fit_transform(data[:, :4])
-    data[:, 4:] = preprocessing.MinMaxScaler().fit_transform(data[:, 4:])
+    data[:, 4:] = preprocessing.MinMaxScaler().fit_transform(data[:, 4:]) * 2 -1
 
 
     # Set the number of objectives
@@ -173,6 +173,14 @@ def worker1(epsilonseed):
 
 if __name__ == "__main__":
 
+    pool3 = multiprocessing.Pool(processes=2)
+    p3 = pool3.map(worker1, [(0.4, 7), (0.2, 7)])
+    np.savetxt("finalrun_noc.txt", np.asarray(p3))
+
+    pool = multiprocessing.Pool(processes=2)
+    p = pool.map(worker1, [(0.1, 7), (0.04, 7)])
+    np.savetxt("finalrun2_noc.txt", np.asarray(p))
+
     # pool3 = multiprocessing.Pool(processes=2)
     # p3 = pool3.map(worker1, [(0.4, 1), (0.4, 2)])
     # np.savetxt("04_yeslsm_norm.txt", np.asarray(p3))
@@ -189,13 +197,13 @@ if __name__ == "__main__":
     # p7 = pool7.map(worker1, [(0.2, 5), (0.2, 6)])
     # np.savetxt("02_yeslsm_norm2.txt", np.asarray(p7))
     #
-    pool4 = multiprocessing.Pool(processes=1)
-    p4 = pool4.map(worker1, [(0.1, 1)])
-    np.savetxt("01_yeslsm_norm.txt", np.asarray(p4))
-
-    pool5 = multiprocessing.Pool(processes=3)
-    p5 = pool5.map(worker1, [(0.1, 5), (0.1, 6), (0.1, 2)])
-    np.savetxt("01_yeslsm_norm2.txt", np.asarray(p5))
+    # pool4 = multiprocessing.Pool(processes=1)
+    # p4 = pool4.map(worker1, [(0.1, 1)])
+    # np.savetxt("01_yeslsm_norm.txt", np.asarray(p4))
+    #
+    # pool5 = multiprocessing.Pool(processes=3)
+    # p5 = pool5.map(worker1, [(0.1, 5), (0.1, 6), (0.1, 2)])
+    # np.savetxt("01_yeslsm_norm2.txt", np.asarray(p5))
 
 
 
