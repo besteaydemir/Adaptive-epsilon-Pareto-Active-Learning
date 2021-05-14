@@ -281,7 +281,6 @@ class AdaptiveEpsilonPAL:
         plt.savefig(titles + "other" +  ".png")
         plt.show()
 
-        ##print(conf_diameter[:self.t])
 
         plt.figure()
         ax = plt.axes()
@@ -298,13 +297,9 @@ class AdaptiveEpsilonPAL:
 
         t2 = time.time()
         self.time_elapsed = t2-t1
-        #print("time")
-        #print(t2 - t1)
+
         pareto_cells = [node.hypercube_list for node in self.p_t]
 
-        #node.hypercube_list[i]
-        #for i in range(len(node.hypercube_list))
-        ##printl(self.p_t)
 
         return self.p_t, pareto_cells
 
@@ -328,7 +323,7 @@ class AdaptiveEpsilonPAL:
 
     def find_V(self, h):
         v_1 = np.sqrt(2)
-        rho = 0.4
+        rho = 0.5
         alpha = 1
 
         m = self.problem_model.m

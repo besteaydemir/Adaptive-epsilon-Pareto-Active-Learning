@@ -3,8 +3,6 @@ import time
 
 import numpy as np
 import gpflow as gpf
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from sklearn import preprocessing
 
 from AdaptiveEpsilonPAL import AdaptiveEpsilonPAL
@@ -19,79 +17,70 @@ import pandas as pd
 
 
 def worker1(epsilonseed):
+
     # Set seed for reproducibility
     epsilon, seed = epsilonseed
     np.random.seed(seed)
 
+
     # Load the dataset into a data frame
     data = pd.read_csv("Runs/noc_CM_log.csv", sep=';', header=None).to_numpy()
-    print(data.shape)
+
 
     # Standardize the design space and the objectives
-    scaler = preprocessing.MinMaxScaler()
-    data[:, :4] = scaler.fit_transform(data[:, :4])
-    data[:, 4:] = preprocessing.MinMaxScaler().fit_transform(data[:, 4:]) * 2 - 1
+    data[:, :4] = preprocessing.MinMaxScaler().fit_transform(data[:, :4])
+    data[:, 4:] = preprocessing.MinMaxScaler().fit_transform(data[:, 4:])
 
-    # plt.scatter(data[:,2], data[:,4])
-    # plt.show()
-    # plt.scatter(data[:, 1], data[:, 4])
-    # plt.show()
-    # plt.scatter(data[:, 2], data[:, 3])
-    # plt.show()
 
-    # fig, axs = plt.subplots(1, 2, tight_layout=True)
-    #
-    # # We can set the number of bins with the `bins` kwarg
-    # axs[0].hist(data[:, 3], bins=20)
-    # axs[1].hist(data[:, 4], bins=20)
-    # plt.show()
-    #
-    # X = data[:, :3]
-    # Y = data[:, 4, None]
-    #
-    # fig = plt.figure()
-    # ax = Axes3D(fig)
-    #
-    # ax.scatter(X[:, 0], X[:, 1], X[:, 2], s = 100, c=Y.flatten(), cmap = plt.get_cmap("magma"))
-    # plt.show()
-    #
+    # Set the number of objectives
+    m = 2
+    d = 4
+
+
     # Randomly choose instances to use in GP initialization, sample from the rest
     np.random.shuffle(data)
     gp_split = data[:40]
     sample_split = data[40:]
 
 
-    #t = 1000 * time.time()  # current time in milliseconds
-    #np.random.seed(int(t) % 2 ** 32)
+    # Find kernel parameters by using gp_split data
+    kernel_list = [gpf.kernels.SquaredExponential(), gpf.kernels.SquaredExponential()]
+    opt = gpf.optimizers.Scipy()
+    noise_variance = 1e-5
 
-    problem_model = OptimizationProblem(cardinality=268-40, N=2, D_1=4, dataset=(sample_split[:, :4], sample_split[:, 4:]))
+    for i in range(m):
+        model = gpf.models.GPR(data=(gp_split[:, :4], gp_split[:, 4:][:, i].reshape(-1, 1)), kernel=kernel_list[i],
+                               noise_variance=noise_variance)
 
-    # Specify kernel and mean function for GP prior
-    a = np.array([0.1, 0.1, 11,0.1])
-    b = 1 + np.random.randn(4,) * 0.1
-    ls = list(a * b )
-    a = np.array([0.1, 0.1, 11, 0.1])
-    b = 1 + np.random.randn(4, ) * 0.1
-    ls2 = list(a * b )
-    kernel_list = [(gpf.kernels.SquaredExponential()),
-                   (gpf.kernels.SquaredExponential())]  # lengthscales=[0.1, 0.1, 0.1]
-    gp = GaussianProcessModel(X=gp_split[:, :4], Y=gp_split[:, 4:], multi=False, periodic=False, m=2,
-                              kernel_list=kernel_list, verbose=True)
+        # Tune the model parameters according to data
+        opt.minimize(
+            model.training_loss,
+            variables=model.trainable_variables,
+            method="l-bfgs-b",
+            options={"disp": False, "maxiter": 100}
+        )
+
+    # Generate the problem model to sample from
+    problem_model = OptimizationProblem(cardinality=286 - 40, N=2, D_1=d,
+                                        dataset=(sample_split[:, :4], sample_split[:, 4:]))
+
+    # Specify kernel for GP prior
+    gp = GaussianProcessModel(kernel_list=kernel_list, d=d, verbose=True)
 
     # Adaptive Epsilon PAL algorithm
-
     delta = 0.10
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=delta, gp=gp,
                                     initial_hypercube=Hypercube(1, (0.5, 0.5, 0.5, 0.5)))
+
     titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed)
-    pareto_set, pareto_set_cells = alg_object.algorithm(titles = titles)
+    pareto_set, pareto_set_cells = alg_object.algorithm(titles=titles)
+
 
     if pareto_set:
 
         hmax = alg_object.hmax
         time_elapsed = alg_object.time_elapsed
         tau_eval = alg_object.tau
-        t_eval = alg_object.t
 
         # Print nodes in the Pareto set
         printl(pareto_set)
@@ -100,9 +89,9 @@ def worker1(epsilonseed):
         pareto_nodes_center = [node.get_center() for node in pareto_set]
 
         # Plot Pareto set
-        a = np.squeeze(np.array(pareto_nodes_center)).reshape(-1, 4)
+        a = np.squeeze(np.array(pareto_nodes_center)).reshape(-1, d)
 
-        y_obs = np.empty((a.shape[0], 2))
+        y_obs = np.empty((a.shape[0], m))
         i = 0
         for row in a:
             data_alg = np.array(row)
@@ -111,12 +100,15 @@ def worker1(epsilonseed):
             i += 1
 
         # Plot pareto front (two functions)
-        hotels = pd.DataFrame({"price": sample_split[:, 4], "distance_to_beach": sample_split[:, 5]})
-        mask = paretoset(hotels, sense=["max", "max"])
+        obj1 = pd.DataFrame({"obj1": sample_split[:, 4], "obj2": sample_split[:, 5]})
+        mask = paretoset(obj1, sense=["max", "max"])
+
 
         # Error metric
         p_set = np.hstack((sample_split[:, 4][mask].reshape(-1, 1), sample_split[:, 5][mask].reshape(-1, 1)))
-        print(p_set)
+
+
+        # Error term
         c = 0
         for row in p_set:
             a = y_obs - row
@@ -130,10 +122,6 @@ def worker1(epsilonseed):
 
         plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle = figtitle)
-        # plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-        #                   plotfront=False)
-
-
 
 
 
@@ -146,9 +134,9 @@ def worker1(epsilonseed):
 
         cells = [hypercube.get_center() for hypercube in cell_list]
         # Plot Pareto set
-        a = np.squeeze(np.array(cells)).reshape(-1, 4)
+        a = np.squeeze(np.array(cells)).reshape(-1, m)
 
-        y_obs = np.empty((a.shape[0], 2))
+        y_obs = np.empty((a.shape[0], d))
         i = 0
         for row in a:
             data_alg = np.array(row)
@@ -157,24 +145,18 @@ def worker1(epsilonseed):
             i += 1
 
         # Plot pareto front (two functions)
-        hotels = pd.DataFrame({"price": sample_split[:, 4], "distance_to_beach": sample_split[:, 5]})
-        mask = paretoset(hotels, sense=["max", "max"])
+        objs = pd.DataFrame({"obj1": sample_split[:, 4], "obj2": sample_split[:, 5]})
+        mask = paretoset(objs, sense=["max", "max"])
+
 
         # Error metric
         p_set2 = np.hstack((sample_split[:, 4][mask].reshape(-1, 1), sample_split[:, 5][mask].reshape(-1, 1)))
-        print(p_set2)
+
         c2 = 0
         for row in p_set2:
-            # row =
-            print(row)
             a = y_obs - row
-            print(a)
             b = np.linalg.norm(a, axis=1)
-            print(b)
             c2 += np.min(b)
-            print(c2)
-            print("ended")
-        print(p_set2.shape[0])
 
         title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta +  ", Error = " + '%.3f' % (c2 / p_set2.shape[0]) + r'$, \tau $ :' + str(
             tau_eval)
@@ -183,12 +165,10 @@ def worker1(epsilonseed):
 
         plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle)
-        # plot_pareto_front(sample_split[:, 3], sample_split[:, 4], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-        #                   plotfront=False)
-        print(tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed)
-        return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed
+
+        return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax
     else:
-        return -1, -1, -1, -1, -1, -1
+        return -1, -1, -1, -1, -1, -1, -1
 
 
 if __name__ == "__main__":
