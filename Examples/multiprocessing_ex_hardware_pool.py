@@ -222,18 +222,18 @@ def worker1(epsilonseed):
 
 
 if __name__ == "__main__":
-    worker1((5, 7))
+    # worker1((5, 7))
     # worker1((0.2, 7))
     # worker1((0.1, 7))
     # worker1((0.04, 7))
 
-    # pool3 = multiprocessing.Pool(processes=2)
-    # p3 = pool3.map(worker1, [(0.8, 13), (0.4, 13), (0.2, 13)])
-    # np.savetxt("finalrun_snw.txt", np.asarray(p3))
+    pool3 = multiprocessing.Pool(processes=3)
+    p3 = pool3.map(worker1, [(0.8, 7), (0.4, 7), (0.2, 7)])
+    np.savetxt("finalrun_snw.txt", np.asarray(p3))
     #
-    # pool = multiprocessing.Pool(processes=2)
-    # p = pool.map(worker1, [(0.1, 13), (0.5, 13)])
-    # np.savetxt("finalrun2_snw.txt", np.asarray(p))
+    pool = multiprocessing.Pool(processes=2)
+    p = pool.map(worker1, [(0.1, 7), (0.05, 7)])
+    np.savetxt("finalrun2_snw.txt", np.asarray(p))
     #
     # pool = multiprocessing.Pool(processes=1)
     # p = pool.map(worker1, [(0.05, 13)])

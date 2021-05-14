@@ -111,6 +111,7 @@ def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None
 
     if lim is not None:
         ax.set_ylim(lim)
+        ax.set_xlim([0.5, 1.1])
 
     if figtitle is not None:
         plt.savefig(figtitle+'.png', bbox_inches='tight')

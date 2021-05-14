@@ -82,7 +82,7 @@ class AdaptiveEpsilonPAL:
         sigmabeta = np.ones((1500,))
         Vt = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t and self.tau < 100 and self.t < 2000:  # While s_t is not empty
+        while self.s_t and self.tau < 200 and self.t < 2000:  # While s_t is not empty
 
             print("-------------------------------------------------------------------------------")
             print("tau" , self.tau)
@@ -238,7 +238,7 @@ class AdaptiveEpsilonPAL:
                     self.p_t = self.p_t + unc_node.reproduce()
                     tau_change = False
                 else:
-                    y = self.problem_model.observe(unc_node.get_center(), std=1e-3)
+                    y = self.problem_model.observe(unc_node.get_center(), std=0)
                     # Update GP parameters
                     print(unc_node.get_center(), y)
                     self.gp.update(unc_node.get_center(), y)
@@ -316,7 +316,7 @@ class AdaptiveEpsilonPAL:
         card = self.problem_model.cardinality  # Cardinality of the design space.
         delta = self.delta
 
-        return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta)) / 4
+        return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta)) / 2
 
     def find_beta_tau(self, tau):
         return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**9 * (tau+1)**2 / (3*self.delta))
@@ -348,7 +348,7 @@ class AdaptiveEpsilonPAL:
                         np.maximum(0, -4 * (D_1 / alpha) * np.log(C_k * (v_1 * rho ** h) ** alpha))) + C_3
         term2 = 4 * C_k * (v_1 * rho ** h) ** alpha
 
-        return term2 * term1 / 4
+        return term2 * term1 / 2
 
 
 

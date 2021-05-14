@@ -70,7 +70,7 @@ def worker1(epsilonseedls):
     delta = 0.15
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=delta, gp=gp,
                                     initial_hypercube=Hypercube(1, (0.5, 0.5)))
-    titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed)
+    titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed) + "ls" + str(ls)
     pareto_set, pareto_set_cells = alg_object.algorithm(titles = titles)
 
 
@@ -106,7 +106,7 @@ def worker1(epsilonseedls):
         title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta + ", Error = " + '%.3f' % (c / p_set.shape[0]) + " " + r'$, \tau $ :' + str(
             tau_eval)
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c / p_set.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "ls" + ls
+            tau_eval) + "seed" + str(seed) + "ls" + str(ls)
 
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
@@ -147,7 +147,7 @@ def worker1(epsilonseedls):
         title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta +  ", Error = " + '%.3f' % (c2 / p_set2.shape[0]) + r'$, \tau $ :' + str(
             tau_eval)
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "ls" + ls
+            tau_eval) + "seed" + str(seed) + "cell" + "ls" + str(ls)
 
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
@@ -156,7 +156,7 @@ def worker1(epsilonseedls):
 
         # Plot close up
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_lim" + "ls" + ls
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim" + "ls" + str(ls)
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, lim=[0.1, 0.8])
@@ -167,7 +167,7 @@ def worker1(epsilonseedls):
         mask_pareto = paretoset(objs, sense=["max", "max"])
 
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_pareto" + "ls" + ls
+            tau_eval) + "seed" + str(seed) + "cell" + "_pareto" + "ls" + str(ls)
 
         plot_pareto_front(func_val1, func_val2, mask,  y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto)
@@ -176,7 +176,7 @@ def worker1(epsilonseedls):
 
         # Plot close up and paretoed
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto" + "ls" + ls
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto" + "ls" + str(ls)
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto, lim=[0.1, 0.8])
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     # worker1((0.1, 7))
     # worker1((0.2, 7))
     # worker1((0.4, 7))
-    # worker1((0.05, 7))
+    worker1((30, 7, 0.3))
 
 
     pool3 = multiprocessing.Pool(processes=4)
