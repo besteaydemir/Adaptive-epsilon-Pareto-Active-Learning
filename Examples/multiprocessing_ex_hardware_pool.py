@@ -191,11 +191,11 @@ if __name__ == "__main__":
     worker1((0.1, 7))
     worker1((0.04, 7))
 
-    pool3 = multiprocessing.Pool(processes=2)
+    pool3 = multiprocessing.Pool(processes=1)
     p3 = pool3.map(worker1, [(0.4, 7), (0.2, 7)])
     np.savetxt("finalrun_snw.txt", np.asarray(p3))
 
-    pool = multiprocessing.Pool(processes=2)
+    pool = multiprocessing.Pool(processes=1)
     p = pool.map(worker1, [(0.1, 7), (0.04, 7)])
     np.savetxt("finalrun2_snw.txt", np.asarray(p))
     #
