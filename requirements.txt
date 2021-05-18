@@ -1,4 +1,9 @@
-scikit-learn
-paretoset
-gpflow
+gpflow~=2.1.4
+numpy~=1.19.5
+pandas~=1.2.1
+paretoset==1.2.0
+sklearn==0.0
+tensorflow~=2.4.1
+tensorboard~=2.4.1
+tensorflow-probability==0.12.1
 

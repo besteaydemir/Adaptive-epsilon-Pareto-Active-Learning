@@ -2,11 +2,10 @@ import numpy as np
 from Hypercube import Hypercube
 from typing import List
 from math import sqrt
-from statistics import mean
 
 from Hyperrectangle import Hyperrectangle
 
-
+"Node class from https://github.com/Bilkent-CYBORG/ACC-UCB"
 class Node:
     hypercube_list: List[Hypercube]
 
@@ -18,6 +17,7 @@ class Node:
         self.hypercube_list = hypercube_list
         self.dimension = self.hypercube_list[0].get_dimension()
         self.R_t = R_t  # Cumulative confidence hyper-rectangle of the node
+
 
     def reproduce(self):
         """
@@ -42,15 +42,19 @@ class Node:
             return [Node(self, self.h + 1, self.hypercube_list[:int(len(self.hypercube_list) / 2)], self.R_t),
                     Node(self, self.h + 1, self.hypercube_list[int(len(self.hypercube_list) / 2):], self.R_t)]
 
+
     def get_center(self):
         return np.mean(np.array([hypercube.center for hypercube in self.hypercube_list]), axis=0).reshape(
             (1, self.dimension))
 
+
     def printhyper(self):
         print(self.hypercube_list)
 
+
     def __eq__(self, other):
         return self.hypercube_list == other.hypercube_list
+
 
     def __str__(self):
         name = "Node: \nDepth: " + str(self.h) + " \nHyperrectangle: " + self.R_t.__str__() + '\nHypercubes: \n'
@@ -60,19 +64,23 @@ class Node:
         name = name + "Node center: " + str(self.get_center()) + '\n'
         return name
 
-    # def __hash__(self):
-    #     return hash(())
 
     def update_cumulative_conf_rect(self, mu, sigma, mu_parent, sigma_parent, beta, V_h, V_h_1):  # B
+        """
+
+        :param mu:
+        :param sigma:
+        :param mu_parent:
+        :param sigma_parent:
+        :param beta:
+        :param V_h:
+        :param V_h_1:
+        :return:
+        """
         # High probability lower and upper bound, B
-        #print("conf")
-        #print(mu)
-        #print(sigma)
         term1 = mu - sqrt(beta) * sigma
         term2 = mu_parent - sqrt(beta) * sigma_parent - V_h_1
-        #print(term1,term2)
         B_lower = np.maximum(term1, term2)
-        #print(B_lower)
 
         term1 = mu + sqrt(beta) * sigma
         term2 = mu_parent + sqrt(beta) * sigma_parent + V_h_1

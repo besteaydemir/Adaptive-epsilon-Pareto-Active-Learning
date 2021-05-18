@@ -36,7 +36,7 @@ def worker1(epsilonseed):
 
     # Generate the optimization problem, used for sampling
     func_list = [func1, func2]
-    problem_model = OptimizationProblem(cardinality=2500, N=2, D_1=1, func_list=func_list)
+    problem_model = OptimizationProblem(cardinality=500, N=2, D_1=1, func_list=func_list)
 
 
     # Visualize the functions (two functions)
@@ -171,6 +171,10 @@ def worker1(epsilonseed):
                           plotfront=True, figtitle=figtitle)
         print(tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax)
         #return tau_eval, c / p_set.shape[0], time_elapsed, epsilon, seed
+
+
+
+
     else:
         return -1, -1, -1, -1, -1, -1
 

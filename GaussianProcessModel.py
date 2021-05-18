@@ -1,8 +1,4 @@
 import numpy as np
-from Hypercube import Hypercube
-from typing import List
-from math import sqrt
-from statistics import mean
 import gpflow
 import tensorflow as tf
 from gpflow.utilities import print_summary
@@ -10,6 +6,13 @@ from gpflow.utilities import print_summary
 
 class GaussianProcessModel:
     def __init__(self, kernel_list, d, verbose=False):
+        """
+        Class for handling GP objects.
+
+        :param kernel_list: Kernel list given in the beginning.
+        :param d: Input dimension.
+        :param verbose:
+        """
         self.m = len(kernel_list)
 
         self.X = np.array([[-1e9] * d])
@@ -35,14 +38,11 @@ class GaussianProcessModel:
         for i in range(self.m):
 
             kernel = self.kernel_list[i]
-            m = gpflow.models.GPR(data=(self.X, self.Y[:, i].reshape(-1, 1)), kernel=kernel, noise_variance=0.01)
+            m = gpflow.models.GPR(data=(self.X, self.Y[:, i].reshape(-1, 1)), kernel=kernel, noise_variance=0.1)
 
             self.lengthscales_list.append(m.kernel.lengthscales)
             self.variance_list.append(m.kernel.variance)
-
-
             gp_list.append(m)
-
 
             if self.verbose is True:
                 print("For objective function ", i)

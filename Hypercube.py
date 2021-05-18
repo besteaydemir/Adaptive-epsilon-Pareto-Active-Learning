@@ -1,8 +1,6 @@
-"""
-Represents a hypercube context region.
-"""
 import numpy as np
 
+"Hypercube class from https://github.com/Bilkent-CYBORG/ACC-UCB"
 class Hypercube:
     def __init__(self, length, center):
         self.center = center

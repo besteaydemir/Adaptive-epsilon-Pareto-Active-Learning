@@ -1,13 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_func_list(list, range1, range2, title1, title2, no_points=None, h = None):
-    if h is None:
-        x1 = np.linspace(range1[0], range1[1], no_points)
-        x2 = np.linspace(range2[0], range2[1], no_points)
-    else:
-        x1 = np.linspace(range1[0], range1[1], h+1)
-        x2 = np.linspace(range2[0], range2[1], h+1)
+
+def plot_func_list(list, range1, range2, title1, title2, no_points=None):
+    """
+    Plotting functions for m = 2 and 2D inputs.
+
+    :param list: List of functions.
+    :param range1: Range for the first dim.
+    :param range2: Range for the second dim.
+    :param title1: Title for 1.
+    :param title2: Title for 2.
+    :param no_points: Grid is no_points x no_points.
+    :return: Function values.
+    """
+
+    x1 = np.linspace(range1[0], range1[1], no_points)
+    x2 = np.linspace(range2[0], range2[1], no_points)
     px1, px2 = np.meshgrid(x1, x2)
 
     fig = plt.figure(figsize=plt.figaspect(0.4))
@@ -29,7 +38,17 @@ def plot_func_list(list, range1, range2, title1, title2, no_points=None, h = Non
     return func_val1, func_val2
 
 
-def plot_func_list_1d(list, range1, title1, title2, no_points=None, h = None):
+def plot_func_list_1d(list, range1, title1, title2, no_points=None):
+    """
+    Plotting functions for m = 2 and 1D inputs.
+
+    :param list: List of functions.
+    :param range1: Range for the first dim.
+    :param title1: Title for 1.
+    :param title2: Title for 2.
+    :param no_points: Grid is no_points.
+    :return: Function values.
+    """
 
     px1 = np.linspace(range1[0], range1[1], no_points).reshape(no_points, 1)
 
@@ -53,18 +72,27 @@ def plot_func_list_1d(list, range1, title1, title2, no_points=None, h = None):
     return func_val1, func_val2
 
 
+def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None, mask_pareto = None, lim=None):
+    """
+    Plotting function for the Pareto sets. m=2
+    :param func_val1: Objective function values.
+    :param func_val2: Objective function values.
+    :param mask: Pareto set mask for different color.
+    :param y1: Algorithm Pareto set.
+    :param y2: Algorithm Pareto set.
+    :param title: Title for image.
+    :param plotfront: If the front is drawn.
+    :param figtitle: Title for saving.
+    :param mask_pareto: Pareto mask for the algorithm node values.
+    :param lim: Axis lims.
+    :return:
+    """
 
-
-
-
-
-
-def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None, y2 = None, title=None, plotfront = False, figtitle = None, mask_pareto = None, lim=None ):
     fig = plt.figure()
-    # plt.rcParams["figure.dpi"] = 400
     ax = plt.axes()
-    if func_val1 is not None:
 
+
+    if func_val1 is not None:
         ax.scatter(func_val1[mask ==False], func_val2[mask == False], s=8, color='gray')
         ax.scatter(func_val1[mask], func_val2[mask], s=8, color='g')
 
@@ -79,7 +107,6 @@ def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None
             x_values = [func_val1sorted[i], func_val1sorted[i+1]]
             y_values = [func_val2sorted[i+1], func_val2sorted[i + 1]]
             plt.plot(x_values, y_values, color='darkseagreen')
-
 
 
     if (y1 is not None):
@@ -111,7 +138,7 @@ def plot_pareto_front(func_val1 = None, func_val2 = None, mask = None, y1 = None
 
     if lim is not None:
         ax.set_ylim(lim)
-        ax.set_xlim([0.5, 1.1])
+        ax.set_xlim([0.25, 1.1])
 
     if figtitle is not None:
         plt.savefig(figtitle+'.png', bbox_inches='tight')

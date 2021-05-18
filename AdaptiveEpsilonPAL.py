@@ -1,64 +1,23 @@
-from Node import Node
-from Hyperrectangle import Hyperrectangle
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import dominated_by, printl
-import copy
 import time
 
+from Node import Node
+from Hyperrectangle import Hyperrectangle
 
-
-def pess(a):
-    pess_set = []
-    for i in range(len(a)):
-        # #print("i", i)
-        set_include = True
-        for j in range(len(a)):
-            if j == i:
-                continue
-            # #print(len(a))
-            # #print("j", j)
-            # #print(a[i].R_t.get_lower())
-            # #print(a[j].R_t.get_lower())
-            # #print(np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()))
-            if np.all(a[i].R_t.get_lower() <= a[j].R_t.get_lower()):
-                set_include = False
-                # #print("here")
-                break
-
-            ##print(set_include)
-
-        # #print("deciding for the node--------------------")
-        # #print(set_include)
-
-        if set_include:
-            pess_set.append(a[i])
-    #     #printl(pess_set)
-    # #printl(a)
-    # #print("returning")
-    return pess_set
-
-
-def set_diff(s1, s2):
-    # #printl(s1)
-    # #printl(s2)
-    tmp = copy.deepcopy(s1)
-    for node in s2:
-        if node in tmp:
-            tmp.remove(node)
-    # #printl(tmp)
-    return tmp
-
+from utils import dominated_by
+from utils_set import set_diff, pess
 
 
 class AdaptiveEpsilonPAL:
+
     def __init__(self, problem_model, epsilon, delta, gp, initial_hypercube):
+
         self.problem_model = problem_model
         self.epsilon = epsilon
         self.delta = delta
         self.gp = gp
 
-        # Initialize
         self.t = 1  # Total number of iterations
         self.tau = 0  # Number of evaluation rounds
 
@@ -68,51 +27,33 @@ class AdaptiveEpsilonPAL:
         self.V = [self.find_V(0)]
         self.beta = [0]
         self.hmax = 0
-        self.hmax_len = 0
         self.t_tau = []
 
         self.time_elapsed = 0
 
 
-    def algorithm(self, titles = None, vis=False):
-        #np.random.seed(7)
+    def algorithm(self, verbose=False, progress_plots=False, titles=None, vis=False):
+
         t1 = time.time()
-        tau_change = True # Initial
+
         sigmas = np.ones((1500,))
         sigmabeta = np.ones((1500,))
         Vt = np.ones((1500,))
         conf_diameter = np.ones((1500,))
-        while self.s_t and self.tau < 200 and self.t < 2000:  # While s_t is not empty
 
-            print("-------------------------------------------------------------------------------")
-            print("tau" , self.tau)
-            print("t" , self.t)
-            print("hmax", self.hmax)
+        while self.s_t:  # While s_t is not empty
 
-            print('s_t length')
-            print(len(self.s_t))
-            print("p_t length")
-            print(len(self.p_t))
-            # if self.p_t:
-            #     #printl(self.p_t)
-            a_t = self.p_t + self.s_t  # Active nodes, union of sets s_t and p_t at the beginning of round t
-            # #print("a_t")
-            # #printl(a_t)
-            p_pess = pess(a_t)  # Pessimistic Pareto set of A_t
+            if verbose is True:
+                print("t: %3d, tau: %3d, S_t length: %3d, S_t length: %3d" % (self.t, self.tau, len(self.s_t), len(self.p_t)))
 
-            # print("p_pess(a_t)")
-            # printl(p_pess)
+            # Active nodes, union of sets s_t and p_t at the beginning of round t
+            a_t = self.p_t + self.s_t
+
+            # Pessimistic Pareto set of A_t
+            p_pess = pess(a_t)
+
 
             "Modeling"
-            #print("Modeling")
-            #self.beta.append(self.find_beta(self.t))
-            #print("VH max", len(self.V) -1)
-
-            # if len(self.V) < self.hmax + 1:
-            #     self.V.append(self.find_V(self.hmax))
-            ##print('s_t before modeling')
-            ##printl(self.s_t)
-
 
             for node in a_t:
                 # Obtain mu_tau and sigma_tau of the node
@@ -121,10 +62,10 @@ class AdaptiveEpsilonPAL:
                 if len(self.V) <= node.h:
                     self.V.append(self.find_V(node.h))
                     self.hmax += 1
-                    self.hmax_len = node.hypercube_list[0].length
 
                 if node.h == 0:
                     V_h_1 = self.V[node.h]
+
                 else:
                     V_h_1 = self.V[node.h - 1]
 
@@ -133,166 +74,117 @@ class AdaptiveEpsilonPAL:
 
 
                 node.update_cumulative_conf_rect(mu_tau, sigma_tau, mu_tau_parent, sigma_tau_parent,
-                                                 #self.beta[self.t],
                                                  self.find_beta(self.t),
                                                  self.V[node.h], V_h_1)
 
 
-            ##print('s_t')
-            ##printl(self.s_t)
-            # #print("a_t")
-            # #printl(a_t)
-
-            #print('s_t length before discard')
-            #print(len(self.s_t))
-
-
             "Discarding"
-            #print("Discarding")
+
             templist = set_diff(self.s_t, p_pess)
-            # #printl(self.s_t)
-            # #printl(p_pess)
-            # #print("set_diff(self.s_t, p_pess)------------------")
-            # #printl(templist)
-            count = 0
+
             for node in templist:
                 for pess_node in p_pess:
-                    count += 1
-                    if count <= 5:
-                        print(node.R_t.upper, pess_node.R_t.lower)
                     if dominated_by(node.R_t.upper, pess_node.R_t.lower, self.epsilon):
-                        print("dominated by")
                         self.s_t.remove(node)
                         break
 
-            #print('s_t length after discard')
-            #print(len(self.s_t))
 
-
-            w_t = self.p_t + self.s_t  # The union of sets St and Pt at the end of the discarding phase of round t
-            #print('w_t')
-            #print(len(w_t))
-            # #printl(w_t)
+            # The union of sets St and Pt at the end of the discarding phase of round t
+            w_t = self.p_t + self.s_t
 
 
             "Epsilon Covering"
-            #print("epsilon Covering")
-            counter = 0
+
             for node in self.s_t:
                 belongs = True
                 for w_node in w_t:
                     if dominated_by(node.R_t.lower, w_node.R_t.upper,
                                     -self.epsilon):  # Doesn't belong to O_epsilon and therefore not removed
                         belongs = False
-                        if counter < 5:
-                            print(node.R_t.lower, w_node.R_t.upper, self.epsilon)
-                        counter += 1
                         break
                 if belongs:
-                    print("belongs")
                     self.s_t.remove(node)
                     self.p_t.append(node)
-            ##print("count", count)
-
-            #print('s_t after e covering')
-            #print(len(self.s_t))
 
 
             "Refining / Evaluating"
-            #print("refining evaluating")
+
             if self.s_t:  # If s_t is not empty
-                # #print("look here")
-                # #print(np.array([node.R_t.diameter for node in w_t]))
+
+                # Find the most uncertain node
                 unc_node_ind = np.argmax(np.array([node.R_t.diameter for node in w_t]))
                 unc_node = w_t[unc_node_ind]
                 conf_diameter[self.t] = unc_node.R_t.diameter
 
-                print("unc_node")
-                print(unc_node)
                 mu_unc, sigma_unc = self.gp.inference(unc_node.get_center())
-                #print(sigma_unc)
 
                 sigmas[self.t] = np.linalg.norm(sigma_unc)
-
                 sigmabeta[self.t] = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc)
-                print(self.V[unc_node.h])
                 Vt[self.t] = self.V[unc_node.h] * np.sqrt(self.problem_model.m)
 
                 condition = np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc) <= self.V[unc_node.h] * np.sqrt(self.problem_model.m)  # Norm V_h vector
-                print("condition")
-                print("beta", np.sqrt(self.find_beta(self.t)))
-                print("sigma", np.linalg.norm(sigma_unc))
-                print("beta*sigma", np.sqrt(self.find_beta(self.t)) * np.linalg.norm(sigma_unc))
-                print("V", self.V[unc_node.h] * np.sqrt(self.problem_model.m))
+
 
                 if condition and unc_node in self.s_t:
                     self.s_t.remove(unc_node)
-                    # #print(unc_node)
-                    # #print("reproduce")
                     repro = unc_node.reproduce()
-                    # #printl(repro)
                     self.s_t = self.s_t + repro
-                    tau_change = False
+
                 elif condition and unc_node in self.p_t:
                     self.p_t.remove(unc_node)
                     self.p_t = self.p_t + unc_node.reproduce()
-                    tau_change = False
+
                 else:
-                    y = self.problem_model.observe(unc_node.get_center(), std=0)
-                    # Update GP parameters
-                    print(unc_node.get_center(), y)
+                    y = self.problem_model.observe(unc_node.get_center(), std=self.problem_model.obs_noise)
+
                     self.gp.update(unc_node.get_center(), y)
                     self.t_tau.append(self.t)
                     self.tau += 1
-                    tau_change = True
+
 
                     if vis is True:
                         self.problem_model.plot_gp_1d(rang=(0,1), gp=self.gp, x=unc_node.get_center(), y=y)
 
 
-
             self.t += 1
 
 
+        if progress_plots is True:
+            plt.figure()
+            ax = plt.axes()
+            ax.plot(range(1,self.t-1), sigmas[1:self.t-1], label = r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+            ax.scatter(self.t_tau, sigmas[self.t_tau], color = 'red', s=6, label=r"$\tau$")
+            ax.set_xlabel('$t$')
+            ax.set_ylabel(r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+            ax.legend()
+            plt.title(r"Posterior Variance after $\tau$ Evaluations")
+            plt.savefig(titles+ ".png", bbox_inches='tight')
+            plt.show()
 
-        plt.figure()
-        ax = plt.axes()
-        ax.plot(range(1,self.t-1), sigmas[1:self.t-1], label = r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
-        #print("herere")
-        #print(self.t_tau)
-        ax.scatter(self.t_tau, sigmas[self.t_tau], color = 'red', s=6, label=r"$\tau$")
-        ax.set_xlabel('$t$')
-        ax.set_ylabel(r'$||\sigma_{\tau}(x_{h_t,i_t})||_2$')
-        ax.legend()
-        plt.title(r"Posterior Variance after $\tau$ Evaluations")
-        plt.savefig(titles+ ".png", bbox_inches='tight')
-        plt.show()
+            plt.figure()
+            ax = plt.axes()
+            ax.plot(range(1, self.t - 1), sigmabeta[1:self.t - 1], label=r'$ \beta_{\tau}^{1/2} ||\sigma_{\tau}(x_{h_t,i_t})||_2$')
+            ax.plot(range(1, self.t - 1), Vt[1:self.t - 1], label=r'$||V_ht||_2$')
+            ax.scatter(self.t_tau, sigmabeta[self.t_tau], color='red', s=6, label=r"$\tau$")
+            ax.scatter(self.t_tau, Vt[self.t_tau], color='red', s=6, label=r"$\tau$")
+            ax.set_xlabel('$t$')
+            ax.set_yscale('log')
+            ax.legend()
+            plt.title(r"Refine/Evaluate Condition after $\tau$ Evaluations")
+            plt.savefig(titles + "other" +  ".png", bbox_inches='tight')
+            plt.show()
 
-        plt.figure()
-        ax = plt.axes()
-        ax.plot(range(1, self.t - 1), sigmabeta[1:self.t - 1], label=r'$ \beta_{\tau}^{1/2} ||\sigma_{\tau}(x_{h_t,i_t})||_2$')
-        ax.plot(range(1, self.t - 1), Vt[1:self.t - 1], label=r'$||V_ht||_2$')
-        ax.scatter(self.t_tau, sigmabeta[self.t_tau], color='red', s=6, label=r"$\tau$")
-        ax.scatter(self.t_tau, Vt[self.t_tau], color='red', s=6, label=r"$\tau$")
-        ax.set_xlabel('$t$')
-        ax.set_yscale('log')
-        ax.legend()
-        plt.title(r"Refine/Evaluate Condition after $\tau$ Evaluations")
-        plt.savefig(titles + "other" +  ".png", bbox_inches='tight')
-        plt.show()
-
-
-        plt.figure()
-        ax = plt.axes()
-        ax.plot(range(1,self.t-1), conf_diameter[1:self.t-1], label='$\omega_t(x_{h_t,i_t})$')
-        ax.set_yscale('log')
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$\omega_t(x_{h_t,i_t})$')
-        plt.axhline(self.epsilon, color='green', label='$\epsilon$')
-        ax.legend()
-        plt.title("Diameter of the Cumulative Confidence \n Hyper-rectangle of the Most Uncertain Node")
-        plt.savefig(titles + "dia" + ".png", bbox_inches='tight')
-        plt.show()
+            plt.figure()
+            ax = plt.axes()
+            ax.plot(range(1,self.t-1), conf_diameter[1:self.t-1], label='$\omega_t(x_{h_t,i_t})$')
+            ax.set_yscale('log')
+            ax.set_xlabel('$t$')
+            ax.set_ylabel('$\omega_t(x_{h_t,i_t})$')
+            plt.axhline(self.epsilon, color='green', label='$\epsilon$')
+            ax.legend()
+            plt.title("Diameter of the Cumulative Confidence \n Hyper-rectangle of the Most Uncertain Node")
+            plt.savefig(titles + "dia" + ".png", bbox_inches='tight')
+            plt.show()
 
 
         t2 = time.time()
@@ -303,27 +195,40 @@ class AdaptiveEpsilonPAL:
 
         return self.p_t, pareto_cells
 
-    def find_beta(self, tau):
-        """
-        The confidence term beta_tau as explained in ref. [3].
-        Args:
-            (int) tau: Number of evaluations performed so far.
 
-        Returns:
-            (float) beta: The confidence term.
+    def find_beta(self, t):
+        """
+        The confidence term (with t).
+
+        :param t: t.
+        :return: beta_t.
         """
         m = self.problem_model.m  # Number obj. functions.
         card = self.problem_model.cardinality  # Cardinality of the design space.
         delta = self.delta
 
-        return (2 / 9) * np.log(m * card * np.pi** 2 * tau ** 2 / (6 * delta)) / 2
+        return (2 / 9) * np.log(m * card * np.pi** 2 * t ** 2 / (6 * delta))
+
 
     def find_beta_tau(self, tau):
-        return 2*np.log(2 * self.problem_model.m * np.pi**2 * 2**9 * (tau+1)**2 / (3*self.delta))
+        """
+        The confidence term (with tau).
+
+        :param tau:
+        :return: beta_tau.
+        """
+        return 2 * np.log(2 * self.problem_model.m * np.pi**2 * 2**9 * (tau+1)**2 / (3 * self.delta))
+
 
     def find_V(self, h):
+        """
+        Calculate V_h in high probability bounds on the variation of f.
+
+        :param h: Depth of a node.
+        :return: V_h.
+        """
         v_1 = np.sqrt(2)
-        rho = 0.40
+        rho = 0.5
         alpha = 1
 
         m = self.problem_model.m
@@ -333,7 +238,7 @@ class AdaptiveEpsilonPAL:
 
         # Constants associated with metric dimension D1
         C_1 = np.sqrt(2 * self.gp.v) / self.gp.L
-        #print("c1", C_1)
+
         C_k = C_1
         C_2 = 2 * np.log(2 * C_1 ** 2 * np.pi ** 2 / 6)
         C_3 = 0.91501 + 2.6945 * np.sqrt(2 * D_1 * alpha * np.log(2))  # eta_1 and eta_2 in the paper.
@@ -348,7 +253,7 @@ class AdaptiveEpsilonPAL:
                         np.maximum(0, -4 * (D_1 / alpha) * np.log(C_k * (v_1 * rho ** h) ** alpha))) + C_3
         term2 = 4 * C_k * (v_1 * rho ** h) ** alpha
 
-        return term2 * term1 / 2
+        return term2 * term1
 
 
 

@@ -1,11 +1,9 @@
 import multiprocessing
-import time
 
 import numpy as np
 import gpflow as gpf
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn import preprocessing
+from paretoset import paretoset
+import pandas as pd
 
 from AdaptiveEpsilonPAL import AdaptiveEpsilonPAL
 from OptimizationProblem import OptimizationProblem
@@ -14,14 +12,13 @@ from Hypercube import Hypercube
 from utils import *
 from utils_plot import plot_pareto_front, plot_func_list
 
-from paretoset import paretoset
-import pandas as pd
 
 
-def worker1(epsilonseedls):
+
+def worker1(epsilonseed):
 
     # Set seed for reproducibility
-    epsilon, seed, ls = epsilonseedls
+    epsilon, seed = epsilonseed
     np.random.seed(seed)
 
 
@@ -61,7 +58,7 @@ def worker1(epsilonseedls):
 
 
     # Specify kernel and mean function for GP prior
-    kernel_gp = gpf.kernels.SquaredExponential(lengthscales=ls, variance=0.4)
+    kernel_gp = gpf.kernels.SquaredExponential(lengthscales=0.30, variance=0.4)
     kernel_list = [kernel_gp, kernel_gp]
     gp = GaussianProcessModel(kernel_list=kernel_list, d=d, verbose=True)
 
@@ -70,7 +67,7 @@ def worker1(epsilonseedls):
     delta = 0.15
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=delta, gp=gp,
                                     initial_hypercube=Hypercube(1, (0.5, 0.5)))
-    titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed) + "ls" + str(ls)
+    titles = "epsilon" + str(epsilon) + "delta" + str(delta) + "seed" + str(seed)
     pareto_set, pareto_set_cells = alg_object.algorithm(titles = titles)
 
 
@@ -106,7 +103,7 @@ def worker1(epsilonseedls):
         title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta + ", Error = " + '%.3f' % (c / p_set.shape[0]) + " " + r'$, \tau $ :' + str(
             tau_eval)
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c / p_set.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "ls" + str(ls)
+            tau_eval) + "seed" + str(seed)
 
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
@@ -147,7 +144,7 @@ def worker1(epsilonseedls):
         title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta +  ", Error = " + '%.3f' % (c2 / p_set2.shape[0]) + r'$, \tau $ :' + str(
             tau_eval)
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "ls" + str(ls)
+            tau_eval) + "seed" + str(seed) + "cell"
 
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
@@ -156,7 +153,7 @@ def worker1(epsilonseedls):
 
         # Plot close up
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_lim" + "ls" + str(ls)
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim"
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, lim=[0.1, 0.8])
@@ -167,7 +164,7 @@ def worker1(epsilonseedls):
         mask_pareto = paretoset(objs, sense=["max", "max"])
 
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_pareto" + "ls" + str(ls)
+            tau_eval) + "seed" + str(seed) + "cell" + "_pareto"
 
         plot_pareto_front(func_val1, func_val2, mask,  y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto)
@@ -176,7 +173,7 @@ def worker1(epsilonseedls):
 
         # Plot close up and paretoed
         figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto" + "ls" + str(ls)
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto"
 
         plot_pareto_front(func_val1, func_val2, mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto, lim=[0.1, 0.8])
@@ -189,43 +186,11 @@ def worker1(epsilonseedls):
 
 
 if __name__ == "__main__":
-
-    # worker1((0.1, 7))
-    # worker1((0.2, 7))
-    # worker1((0.4, 7))
-    worker1((30, 7, 0.3))
+    pool = multiprocessing.Pool(processes=1)
+    p = pool.map(worker1, [(0.02, 7)])
+    np.savetxt("final_gp2_3.txt", np.asarray(p))
 
 
-    pool3 = multiprocessing.Pool(processes=4)
-    p3 = pool3.map(worker1, [(0.1, 7, 0.33), (0.1, 7, 0.40), (0.1, 7, 0.27), (0.1, 7, 0.20)])
-    np.savetxt("final_gp2_noisy_1.txt", np.asarray(p3))
-    #
-    # pool = multiprocessing.Pool(processes=2)
-    # p = pool.map(worker1, [(0.1, 7), (0.05, 7)])
-    # np.savetxt("final_gp2_2.txt", np.asarray(p))
-
-    # pool = multiprocessing.Pool(processes=1)
-    # p = pool.map(worker1, [(0.02, 7)])
-    # np.savetxt("final_gp2_3.txt", np.asarray(p))
-
-
-
-
-    # pool4 = multiprocessing.Pool(processes=2)
-    # p4 = pool4.map(worker1, [(0.1, 1), (0.1, 2)])
-    # np.savetxt("01_yeslsm_norm.txt", np.asarray(p4))
-    #
-    # pool5 = multiprocessing.Pool(processes=2)
-    # p5 = pool5.map(worker1, [(0.1, 5), (0.1, 6)])
-    # np.savetxt("01_yeslsm_norm2.txt", np.asarray(p5))
-    #
-    # pool6 = multiprocessing.Pool(processes=2)
-    # p6 = pool6.map(worker1, [(0.2, 1), (0.2, 2)])
-    # np.savetxt("02_yeslsm_norm.txt", np.asarray(p6))
-    #
-    # pool7 = multiprocessing.Pool(processes=2)
-    # p7 = pool7.map(worker1, [(0.2, 5), (0.2, 6)])
-    # np.savetxt("02_yeslsm_norm2.txt", np.asarray(p7))
 
 
 

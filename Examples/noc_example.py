@@ -1,6 +1,4 @@
 import multiprocessing
-import time
-
 import numpy as np
 import gpflow as gpf
 from sklearn import preprocessing
@@ -11,6 +9,7 @@ from GaussianProcessModel import GaussianProcessModel
 from Hypercube import Hypercube
 from utils import printl
 from utils_plot import plot_pareto_front
+from gpflow.utilities import print_summary
 
 from paretoset import paretoset
 import pandas as pd
@@ -24,7 +23,7 @@ def worker1(epsilonseed):
 
 
     # Load the dataset into a data frame
-    data = pd.read_csv("Runs/noc_CM_log.csv", sep=';', header=None).to_numpy()
+    data = pd.read_csv("Data/noc_CM_log.csv", sep=';', header=None).to_numpy()
 
 
     # Standardize the design space and the objectives
@@ -43,15 +42,24 @@ def worker1(epsilonseed):
     sample_split = data[40:]
 
 
+    # Plot pareto front (two functions)
+    objs = pd.DataFrame({"obj1": sample_split[:, 4], "obj2": sample_split[:, 5]})
+    mask = paretoset(objs, sense=["max", "max"])
+
+    plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask,
+                      plotfront=True, figtitle="initpareto_noc")
+
+
     # Find kernel parameters by using gp_split data
     kernel_list = [gpf.kernels.SquaredExponential(), gpf.kernels.SquaredExponential()]
     opt = gpf.optimizers.Scipy()
-    noise_variance = 1e-5
+    noise_variance = 1e-1
 
     for i in range(m):
         model = gpf.models.GPR(data=(gp_split[:, :4], gp_split[:, 4:][:, i].reshape(-1, 1)), kernel=kernel_list[i],
                                noise_variance=noise_variance)
-
+        print_summary(model)
+        print(model.kernel.lengthscales.numpy())
         # Tune the model parameters according to data
         opt.minimize(
             model.training_loss,
@@ -59,6 +67,8 @@ def worker1(epsilonseed):
             method="l-bfgs-b",
             options={"disp": False, "maxiter": 100}
         )
+        print_summary(model)
+        print(model.kernel.lengthscales.numpy())
 
     # Generate the problem model to sample from
     problem_model = OptimizationProblem(cardinality=286 - 40, N=2, D_1=d,
@@ -68,7 +78,7 @@ def worker1(epsilonseed):
     gp = GaussianProcessModel(kernel_list=kernel_list, d=d, verbose=True)
 
     # Adaptive Epsilon PAL algorithm
-    delta = 0.10
+    delta = 0.15
     alg_object = AdaptiveEpsilonPAL(problem_model, epsilon=epsilon, delta=delta, gp=gp,
                                     initial_hypercube=Hypercube(1, (0.5, 0.5, 0.5, 0.5)))
 
@@ -88,44 +98,7 @@ def worker1(epsilonseed):
         # Get the center of each node in the Pareto set and plot after observing
         pareto_nodes_center = [node.get_center() for node in pareto_set]
 
-        # Plot Pareto set
-        a = np.squeeze(np.array(pareto_nodes_center)).reshape(-1, d)
 
-        y_obs = np.empty((a.shape[0], m))
-        i = 0
-        for row in a:
-            data_alg = np.array(row)
-            y = problem_model.observe(data_alg, std=0)
-            y_obs[i, :] = y
-            i += 1
-
-        # Plot pareto front (two functions)
-        obj1 = pd.DataFrame({"obj1": sample_split[:, 4], "obj2": sample_split[:, 5]})
-        mask = paretoset(obj1, sense=["max", "max"])
-
-
-        # Error metric
-        p_set = np.hstack((sample_split[:, 4][mask].reshape(-1, 1), sample_split[:, 5][mask].reshape(-1, 1)))
-
-
-        # Error term
-        c = 0
-        for row in p_set:
-            a = y_obs - row
-            b = np.linalg.norm(a, axis=1)
-            c += np.min(b)
-
-        title = "$\epsilon = $" + '%.2f' % epsilon + " $ \delta = $" + '%.2f' % delta + ", Error = " + '%.3f' % (c / p_set.shape[0]) + r'$, \tau $ :' + str(
-            tau_eval)
-        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c / p_set.shape[0]) + 'tau' + str(
-            tau_eval) + "seed" + str(seed)
-
-        plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
-                          plotfront=True, figtitle = figtitle)
-
-
-
-        # 2nd
         # Get the center of each node in the Pareto set and plot after observing
         cell_list = []
         for node in pareto_set:
@@ -134,9 +107,9 @@ def worker1(epsilonseed):
 
         cells = [hypercube.get_center() for hypercube in cell_list]
         # Plot Pareto set
-        a = np.squeeze(np.array(cells)).reshape(-1, m)
+        a = np.squeeze(np.array(cells)).reshape(-1, d)
 
-        y_obs = np.empty((a.shape[0], d))
+        y_obs = np.empty((a.shape[0], m))
         i = 0
         for row in a:
             data_alg = np.array(row)
@@ -166,44 +139,52 @@ def worker1(epsilonseed):
         plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
                           plotfront=True, figtitle=figtitle)
 
-        return tau_eval, c / p_set.shape[0], c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax
+
+        # Plot close up
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim"
+
+        plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, lim=[0.7, 1.1])
+
+        # Plot masked
+        objs = pd.DataFrame({"obj1": y_obs[:, 0], "obj2": y_obs[:, 1]})
+        mask_pareto = paretoset(objs, sense=["max", "max"])
+
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "_pareto"
+
+        plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto)
+
+
+        # Plot close up and paretoed
+        figtitle = "epsilon" + str(epsilon) + "delta" + str(delta) + "Error" + str(c2 / p_set2.shape[0]) + 'tau' + str(
+            tau_eval) + "seed" + str(seed) + "cell" + "_lim_pareto"
+
+        plot_pareto_front(sample_split[:, 4], sample_split[:, 5], mask, y_obs[:, 0], y_obs[:, 1], title=title,
+                          plotfront=True, figtitle=figtitle, mask_pareto=mask_pareto, lim=[0.7, 1.1])
+
+        return tau_eval, c2 / p_set2.shape[0], time_elapsed, epsilon, seed, hmax
     else:
-        return -1, -1, -1, -1, -1, -1, -1
+        return -1, -1, -1, -1, -1, -1
 
 
 if __name__ == "__main__":
 
-    pool3 = multiprocessing.Pool(processes=1)
-    p3 = pool3.map(worker1, [(0.4, 7), (0.2, 7)])
+    pool = multiprocessing.Pool(processes=2)
+    p = pool.map(worker1, [(0.8, 7), (0.4, 7)])
+    np.savetxt("finalrun2_noc.txt", np.asarray(p))
+
+    pool3 = multiprocessing.Pool(processes=2)
+    p3 = pool3.map(worker1, [(0.1, 7), (0.2, 7)])
     np.savetxt("finalrun_noc.txt", np.asarray(p3))
 
     pool = multiprocessing.Pool(processes=1)
-    p = pool.map(worker1, [(0.1, 7), (0.04, 7)])
-    np.savetxt("finalrun2_noc.txt", np.asarray(p))
+    p = pool.map(worker1, [(0.05, 7)])
+    np.savetxt("finalrun3_noc.txt", np.asarray(p))
 
-    # pool3 = multiprocessing.Pool(processes=2)
-    # p3 = pool3.map(worker1, [(0.4, 1), (0.4, 2)])
-    # np.savetxt("04_yeslsm_norm.txt", np.asarray(p3))
-    #
-    # pool = multiprocessing.Pool(processes=2)
-    # p = pool.map(worker1, [(0.4, 5), (0.4, 6)])
-    # np.savetxt("04_yeslsm_norm2.txt", np.asarray(p))
-    #
-    # pool6 = multiprocessing.Pool(processes=2)
-    # p6 = pool6.map(worker1, [(0.2, 1), (0.2, 2)])
-    # np.savetxt("02_yeslsm_norm.txt", np.asarray(p6))
-    #
-    # pool7 = multiprocessing.Pool(processes=2)
-    # p7 = pool7.map(worker1, [(0.2, 5), (0.2, 6)])
-    # np.savetxt("02_yeslsm_norm2.txt", np.asarray(p7))
-    #
-    # pool4 = multiprocessing.Pool(processes=1)
-    # p4 = pool4.map(worker1, [(0.1, 1)])
-    # np.savetxt("01_yeslsm_norm.txt", np.asarray(p4))
-    #
-    # pool5 = multiprocessing.Pool(processes=3)
-    # p5 = pool5.map(worker1, [(0.1, 5), (0.1, 6), (0.1, 2)])
-    # np.savetxt("01_yeslsm_norm2.txt", np.asarray(p5))
+
 
 
 

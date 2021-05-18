@@ -5,29 +5,36 @@ import scipy as sp
 
 
 def dominated_by(v1, v2, epsilon=None):  # Weakly
-    # print("dom by")
-    # print(v1)
-    # print(v2)
+    """
+    Checks if one hypercube is dominated by another.
+    :param v1: List
+    :param v2: List
+    :param epsilon: Accuracy level given as input to the algorithm
+    :return:
+    """
+
     v11 = np.asarray(v1).reshape(-1,1)
     v22 = np.asarray(v2).reshape(-1,1)
-    # print(v11)
-    # print(v22)
-    # print(epsilon)
-
 
     if epsilon is not None:
-        #print(v11 <= v22 + epsilon)
         return np.all(v11 <= v22 + epsilon)
     return np.all(v1 <= v2)
 
 
 def printl(list):
-    print("~~~~List begin~~~~~~~~~~~~~~~~~~~~~~~~~~" , len(list))
+    """
+    List print function.
+
+    :param list: List of nodes.
+    :return:
+    """
+    print("~~~~List begin~~~~~~~~~~~~~~~~~~~~~~~~~~", len(list))
     for node in list:
         print(node)
     print("~~~~List end~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
+# Code taken from https://github.com/befelix/SafeOpt
 def linearly_spaced_combinations(bounds, num_samples):
     """
     Return 2-D array with all linearly spaced combinations with the bounds.
@@ -64,6 +71,7 @@ def linearly_spaced_combinations(bounds, num_samples):
     return np.array([x.ravel() for x in np.meshgrid(*inputs)]).T
 
 
+# Code taken from https://github.com/befelix/SafeOpt
 def sample_gp_function(kernel, bounds, noise_var, num_samples,
                            interpolation='kernel', mean_function=None):
         """
@@ -96,12 +104,7 @@ def sample_gp_function(kernel, bounds, noise_var, num_samples,
             set the true function values are returned (useful for plotting).
         """
         inputs = linearly_spaced_combinations(bounds, num_samples)
-        # print(inputs)
-        # print(inputs.shape)
-        # print(kernel(inputs))
-        # print(kernel(inputs).shape)
         cov = kernel(inputs) + np.eye(inputs.shape[0]) * 1e-6
-        #cov = kernel.K(inputs) + np.eye(inputs.shape[0]) * 1e-6
         output = np.random.multivariate_normal(np.zeros(inputs.shape[0]),
                                                cov)
 
@@ -151,16 +154,7 @@ def sample_gp_function(kernel, bounds, noise_var, num_samples,
                     Whether to include prediction noise
                 """
                 x = np.atleast_2d(x)
-                # print("heree")
-                # print(inputs.shape)
-                # print(x.shape)
-                #
-                # print(kernel(x, inputs).numpy().shape)
-                # print(alpha.shape)
-                #
-                #
                 y = kernel(x, inputs).numpy().dot(alpha)
-                # print(y)
 
                 y = y[:, None]
                 if mean_function is not None:
