@@ -50,7 +50,6 @@ class OptimizationProblem:
             xinv = x
             # Find the closest one
             a = (self.x - xinv)
-
             b = np.linalg.norm(a, axis=1)
             c = np.argmin(b)
             obs = self.y[c]
@@ -58,7 +57,7 @@ class OptimizationProblem:
         return obs
 
 
-
+    # Incomplete
     def plot_gp_1d(self, rang, gp, x, y):
         """
         Plotting GP for 1D inputs (incomplete).

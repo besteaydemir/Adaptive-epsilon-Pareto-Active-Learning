@@ -17,8 +17,6 @@ from utils import printl
 from utils_plot import plot_pareto_front
 
 
-
-
 def worker1(epsilonseed):
 
     # Set seed for reproducibility

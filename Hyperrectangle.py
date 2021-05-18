@@ -1,7 +1,4 @@
 import numpy as np
-"""
-Represents a hypercube context region.
-"""
 
 
 class Hyperrectangle:

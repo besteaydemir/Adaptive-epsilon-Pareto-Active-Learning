@@ -15,6 +15,7 @@ class GaussianProcessModel:
         """
         self.m = len(kernel_list)
 
+        # To initialize without data
         self.X = np.array([[-1e9] * d])
         self.Y = np.array([[0.] * self.m]).reshape(1, self.m)
 

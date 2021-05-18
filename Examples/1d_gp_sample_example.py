@@ -1,11 +1,5 @@
-import multiprocessing
-import time
-
-import numpy as np
 import gpflow as gpf
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn import preprocessing
+
 
 from AdaptiveEpsilonPAL import AdaptiveEpsilonPAL
 from OptimizationProblem import OptimizationProblem
@@ -17,7 +11,7 @@ from utils_plot import plot_pareto_front, plot_func_list, plot_func_list_1d
 from paretoset import paretoset
 import pandas as pd
 
-
+# Incomplete
 def worker1(epsilonseed):
 
     # Set seed for reproducibility
@@ -70,7 +64,6 @@ def worker1(epsilonseed):
                    range(2)]  # lengthscales=[0.5, 0.5]
     kernel_gp = gpf.kernels.SquaredExponential(lengthscales=0.20, variance=0.3)
     kernel_list = [kernel_gp, kernel_gp]
-    # kernel_list = [gpf.kernels.Periodic(gpf.kernels.SquaredExponential(lengthscales=[0.1, 0.1])) for _ in range(2)] # lengthscales=[0.5, 0.5]
     gp = GaussianProcessModel(data, y, multi=False, periodic=True, m=2, kernel_list=kernel_list, verbose=True)
 
 

@@ -4,9 +4,9 @@ import numpy as np
 import scipy as sp
 
 
-def dominated_by(v1, v2, epsilon=None):  # Weakly
+def dominated_by(v1, v2, epsilon=None):
     """
-    Checks if one hypercube is dominated by another.
+    Checks if one hypercube is weakly dominated by another.
     :param v1: List
     :param v2: List
     :param epsilon: Accuracy level given as input to the algorithm

@@ -40,7 +40,7 @@ def plot_func_list(list, range1, range2, title1, title2, no_points=None):
 
 def plot_func_list_1d(list, range1, title1, title2, no_points=None):
     """
-    Plotting functions for m = 2 and 1D inputs.
+    Plotting functions for m = 2 and 1D input designs.
 
     :param list: List of functions.
     :param range1: Range for the first dim.

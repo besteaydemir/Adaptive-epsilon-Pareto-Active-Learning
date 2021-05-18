@@ -36,6 +36,7 @@ class AdaptiveEpsilonPAL:
 
         t1 = time.time()
 
+        # For plotting
         sigmas = np.ones((1500,))
         sigmabeta = np.ones((1500,))
         Vt = np.ones((1500,))

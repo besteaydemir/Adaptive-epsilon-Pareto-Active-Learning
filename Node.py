@@ -6,6 +6,7 @@ from math import sqrt
 from Hyperrectangle import Hyperrectangle
 
 "Node class from https://github.com/Bilkent-CYBORG/ACC-UCB"
+
 class Node:
     hypercube_list: List[Hypercube]
 
